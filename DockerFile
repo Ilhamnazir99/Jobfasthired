@@ -35,7 +35,8 @@ RUN npm install && npm run build
 # Generate Laravel app key
 RUN php artisan key:generate
 
-# Cache configuration (uses Railway-provided ENV variables)
+# Cache configuration (uses Railway-provided ENV variables
+RUN php artisan config:clear
 RUN php artisan config:cache
 
 # Set file permissions
