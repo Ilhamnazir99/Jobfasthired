@@ -41,7 +41,7 @@ RUN php artisan config:cache
 
 # Set file permissions
 RUN chmod -R 775 storage bootstrap/cache && \
-    chown -R www-data:www-data storage bootstrap/cache
+    chown -R www-data:www-data storage bootstrap/cache public/images
 
 # Expose Laravel port (matches Railway’s $PORT)
 EXPOSE 8080

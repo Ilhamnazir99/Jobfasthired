@@ -95,7 +95,7 @@ class ProfileController extends Controller
             // Store new image
             $filename = time() . '_' . $request->file('profile_image')->getClientOriginalName();
             $request->file('profile_image')->move(public_path('images/profile_images'), $filename);
-            $user->profile_image = 'images/profile_images/' . $filename;
+            $user->profile_image = 'profile_images/' . $filename;
         }
 
 
