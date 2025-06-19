@@ -1,6 +1,6 @@
 FROM php:8.2-cli
 
-# Pasang system dependencies
+# Install system dependencies
 RUN apt-get update && apt-get install -y \
     unzip \
     git \
@@ -17,44 +17,33 @@ RUN apt-get update && apt-get install -y \
 RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
     && apt-get install -y nodejs
 
-# Pasang composer
+# Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 # Set working directory
 WORKDIR /app
 
-# Salin semua fail projek
+# Copy project files
 COPY . .
 
-# Pasang composer dependencies
+# Install PHP dependencies
 RUN composer install --no-dev --optimize-autoloader
-# RUN composer dump-autoload
 
-# Pasang npm dependencies dan build assets
+# Install and build Vite assets
 RUN npm install && npm run build
 
-# Generate APP_KEY kalau tiada
-# RUN if [ ! -f .env ]; then cp .env.example .env; fi && \
-
-# RUN cp -f .env.example .env && php artisan key:generate --force
-RUN rm -f .env --force
+# Generate Laravel app key
 RUN php artisan key:generate
-RUN php artisan config:clear && php artisan cache:clear
-# RUN php artisan migrate --force
 
-# Create public/app folder to avoid error if missing
-RUN mkdir -p public/app
+# Cache configuration (uses Railway-provided ENV variables)
+RUN php artisan config:cache
 
-# Then fix permissions (including public/app)
-RUN chmod -R 775 storage bootstrap/cache public/app \
-    && chown -R www-data:www-data storage bootstrap/cache public public/app
+# Set file permissions
+RUN chmod -R 775 storage bootstrap/cache && \
+    chown -R www-data:www-data storage bootstrap/cache
 
-# Copy entrypoint script and give execution permission
-# COPY entrypoint.sh /entrypoint.sh
-# RUN chmod +x /entrypoint.sh
-
-# Expose port (Railway inject ${PORT})
+# Expose Laravel port (matches Railway’s $PORT)
 EXPOSE 8080
 
-# Use entrypoint script to start container
-ENTRYPOINT ["/entrypoint.sh"]
+# Start Laravel on 0.0.0.0 to support Railway
+CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=8080"]
