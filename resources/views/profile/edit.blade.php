@@ -11,7 +11,7 @@
         <div class="flex flex-col items-center justify-center">
             <div class="relative">
                 @if ($user->profile_image)
-                    <img src="{{ asset('storage/' . $user->profile_image) }}" alt="Profile Image" class="w-32 h-32 rounded-full border-4 border-white shadow object-cover">
+                    <img src="{{ asset('images/' . $user->profile_image) }}" alt="Profile Image" class="w-32 h-32 rounded-full border-4 border-white shadow object-cover">
                 @else
                     <img src="{{ asset('default-avatar.png') }}" alt="Default Avatar" class="w-32 h-32 rounded-full border-4 border-white shadow object-cover">
                 @endif

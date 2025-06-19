@@ -75,16 +75,29 @@ class ProfileController extends Controller
 
         $user = Auth::user();
 
+        // if ($request->hasFile('profile_image')) {
+        //     // Delete old image if exists
+        //     if ($user->profile_image && Storage::disk('public')->exists($user->profile_image)) {
+        //         Storage::disk('public')->delete($user->profile_image);
+        //     }
+
+        //     // Store new image
+        //     $path = $request->file('profile_image')->store('profile_images', 'public');
+        //     $user->profile_image = $path;
+        // }
+
         if ($request->hasFile('profile_image')) {
             // Delete old image if exists
-            if ($user->profile_image && Storage::disk('public')->exists($user->profile_image)) {
-                Storage::disk('public')->delete($user->profile_image);
+            if ($user->profile_image && file_exists(public_path($user->profile_image))) {
+                unlink(public_path($user->profile_image));
             }
 
             // Store new image
-            $path = $request->file('profile_image')->store('profile_images', 'public');
-            $user->profile_image = $path;
+            $filename = time() . '_' . $request->file('profile_image')->getClientOriginalName();
+            $request->file('profile_image')->move(public_path('images/profile_images'), $filename);
+            $user->profile_image = 'images/profile_images/' . $filename;
         }
+
 
         $user->save();
 
