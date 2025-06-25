@@ -26,7 +26,7 @@
 
 {{-- HERO + SEARCH --}}
 <div class="relative px-6 py-16 bg-cover bg-center bg-no-repeat"
-     style="background-image: url({{ asset('storage/my-background.jpg') }});"
+     style="background-image: url({{ asset('images/my-background.jpg') }});"
      data-step="1"
      data-intro="Search jobs using keywords or your location!">
     <div class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-10 items-center text-white">
@@ -75,7 +75,7 @@
 
         <!-- IMAGE -->
         <div class="flex justify-center">
-            <img src="{{ asset('storage/job-fair-poster.png') }}" alt="Job Search Illustration" class="w-full max-w-md">
+            <img src="{{ asset('images/job-fair-poster.png') }}" alt="Job Search Illustration" class="w-full max-w-md">
         </div>
     </div>
 </div>
