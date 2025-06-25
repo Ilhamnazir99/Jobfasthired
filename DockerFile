@@ -43,6 +43,7 @@ RUN php artisan config:cache
 RUN chmod -R 775 storage bootstrap/cache && \
     chown -R www-data:www-data storage bootstrap/cache public/images
 
+RUN php artisan migrate --force
 # Expose Laravel port (matches Railway’s $PORT)
 EXPOSE 8080
 
