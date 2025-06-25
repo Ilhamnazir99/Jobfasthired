@@ -133,7 +133,7 @@ $job->schedule = json_decode(json_encode($scheduleData), true);
         }
     
         // ✅ 7. Redirect with success
-        return redirect()->route('student.dashboard')->with('success', 'Application submitted successfully.');
+        return redirect()->route('student.applied.jobs')->with('success', 'Application submitted successfully.');
     }
     
 
