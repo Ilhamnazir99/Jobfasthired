@@ -66,9 +66,9 @@
             @endif
         </a>
     @elseif($role === 'student')
-        <a href="{{ route('student.dashboard') }}"
+        <a href="{{ route('job.search') }}"
            class="nav-link border-b-2 border-transparent hover:border-blue-600 {{ request()->is('student/dashboard*') ? 'border-blue-600 text-blue-700 font-semibold' : '' }}">
-            Dashboard
+            Job Search
         </a>
         <a href="{{ route('student.applied.jobs') }}"
            class="nav-link border-b-2 border-transparent hover:border-blue-600 {{ request()->is('student/applied*') ? 'border-blue-600 text-blue-700 font-semibold' : '' }}">
