@@ -108,7 +108,7 @@
     <div class="max-w-7xl mx-auto px-6 mt-12 grid grid-cols-1 md:grid-cols-3 gap-6">
 
         <!-- Job Listings -->
-        <div class="md:col-span-1 overflow-y-auto h-90 space-y-4">
+        <div class="md:col-span-1 overflow-y-auto space-y-4" style="height: 800px;">
             <h2 class="text-xl font-semibold mb-4">Available Part-Time Jobs</h2>
             <div id="job-list" class="space-y-4">
                 <div id="blade-job-list">
