@@ -67,7 +67,7 @@
 
                         {{-- Row 2: Category, Salary, Button --}}
                         <div class="flex flex-wrap gap-4 items-center">
-                            {{-- Category 
+                            
                             <select name="category" class="flex-1 min-w-[100px] p-3 border rounded-md shadow-sm text-black">
                                 <option value="">All Categories</option>
                                 @foreach ($categories as $category)
@@ -76,19 +76,18 @@
                                     </option>
                                 @endforeach
                             </select>
---}}
                            {{-- Salary Range --}}
-                            <!-- <div class="w-full md:w-auto flex flex-col">
-                                <label for="min_salary" class="text-sm text-white-700 mb-1">Min Salary (RM): <span id="salaryValue">{{ request('min_salary', 1000) }}</span></label>
+                            <div class="w-full md:w-auto flex flex-col">
+                                <label for="min_salary" class="text-sm text-white-700 mb-1">Min Salary (Per hours): RM<span id="salaryValue">{{ request('min_salary', 0) }}</span></label>
                                 <input type="range" name="min_salary" id="min_salary"
-                                    min="0" max="5000" step="50"
-                                    value="{{ request('min_salary', 1000) }}"
+                                    min="0" max="25" step="1"
+                                    value="{{ request('min_salary', 0) }}"
                                     class="w-full md:w-[200px] accent-blue-600"
                                     oninput="document.getElementById('salaryValue').textContent = this.value">
-                            </div> -->
+                            </div>
 
                             {{-- Search Button --}}
-                            <button type="submit"
+                            <button type="submit" id="search-btn"
                                 class="bg-blue-600 text-white px-6 py-3 rounded-md shadow hover:bg-blue-700 transition w-full md:w-auto">
                                 Search
                             </button>
@@ -109,7 +108,7 @@
     <div class="max-w-7xl mx-auto px-6 mt-12 grid grid-cols-1 md:grid-cols-3 gap-6">
 
         <!-- Job Listings -->
-        <div class="md:col-span-1 overflow-y-auto h-[500px] space-y-4">
+        <div class="md:col-span-1 overflow-y-auto h-90 space-y-4">
             <h2 class="text-xl font-semibold mb-4">Available Part-Time Jobs</h2>
             <div id="job-list" class="space-y-4">
                 <div id="blade-job-list">
@@ -162,6 +161,7 @@
                                         </div> -->
                     @empty
                         <p>No jobs found.</p>
+
                     @endforelse
                 </div>
             </div>
@@ -214,6 +214,10 @@
                 </div>
                 <button class="mt-6 bg-blue-600 hover:bg-blue-700 text-white font-medium px-4 py-2 rounded transition"
                     id="apply-btn">Apply Now</button>
+            </div>
+            <div id="job-details-default" class="mt-6 p-6 bg-white shadow-xl rounded-lg" style="height: 400px;">
+                <h3 class="text-2xl font-bold text-gray-400 mb-2" id="job-title"><i class="fa-solid fa-arrow-left mr-2"></i>Select a Job</h3>
+                    <span class="text-gray-400 ml-5" id="job-location">Display details here</span>
             </div>
         </div>
     </div> {{-- END OF GRID LAYOUT --}}
@@ -375,6 +379,9 @@
             // ✅ Keep your current structure, just inject `scheduleHtml`
             jobCard.innerHTML = `
                     <h3 class="text-lg font-bold">${job.title}</h3>
+                    ${job.category_name ? `<span class="inline-block bg-blue-100 text-blue-800 text-xs font-semibold px-2 py-1 rounded-full mt-1 mb-2">
+                        ${job.category_name}
+                    </span>` : ''}
 
                     ${job.company_name ? `<p class="text-sm text-gray-500">${job.company_name}</p>` : ''}
 
@@ -452,6 +459,7 @@
             if (!job) return;
 
             document.getElementById('job-details').classList.remove('hidden');
+            document.getElementById('job-details-default').classList.add('hidden');
 
             document.getElementById('job-title').innerText = job.title;
             document.getElementById('job-location').innerText = job.location ?? 'Location not specified';
@@ -661,14 +669,22 @@
 
         document.getElementById('search-btn').addEventListener('click', function () {
             const title = document.querySelector('input[name="title"]').value.trim();
+            const category = document.querySelector('select[name="category"]').value;
+            const minSalary = document.querySelector('input[name="min_salary"]')?.value || '';
             const location = document.querySelector('input[name="location"]').value.trim();
             const radius = currentRadius;
-
+            const jobList = document.getElementById("job-list");
+                
             if (!location) {
                 alert("Please enter a location or use 'Your Location'.");
                 return;
             }
-
+            // ✅ Show loading spinner only once here
+            jobList.innerHTML = `
+                <div class="text-center text-blue-600 font-semibold my-4">
+                    <i class="fa fa-spinner fa-spin mr-2"></i> Searching jobs...
+                </div>
+            `;
             const geocoder = new google.maps.Geocoder();
             geocoder.geocode({
                 address: location
@@ -680,7 +696,7 @@
                     showUserLocationOnMap(lat, lng); // Show location on map
 
                     // ✅ Fetch filtered jobs from backend (force JSON response)
-                    fetch(`/job-search?title=${encodeURIComponent(title)}&location=${encodeURIComponent(location)}&lat=${lat}&lng=${lng}&radius=${radius / 1000}`, {
+                    fetch(`/job-search?title=${encodeURIComponent(title)}&location=${encodeURIComponent(location)}&lat=${lat}&lng=${lng}&radius=${radius / 1000}&category=${encodeURIComponent(category)}&min_salary=${minSalary}`, {
                         headers: {
                             'Accept': 'application/json'
                         }
@@ -770,55 +786,55 @@
             });
 
             // 4. AJAX SEARCH BTN — already exists in your code, but we enhance it here:
-            document.getElementById('search-btn').addEventListener('click', function () {
-                const title = document.querySelector('input[name="title"]').value.trim();
-                const location = document.querySelector('input[name="location"]').value.trim();
-                const radius = currentRadius;
+            // document.getElementById('search-btn').addEventListener('click', function () {
+            //     const title = document.querySelector('input[name="title"]').value.trim();
+            //     const location = document.querySelector('input[name="location"]').value.trim();
+            //     const radius = currentRadius;
 
-                if (!location) {
-                    alert("Please enter a location or use 'Your Location'.");
-                    return;
-                }
+            //     if (!location) {
+            //         alert("Please enter a location or use 'Your Location'.");
+            //         return;
+            //     }
 
-                const geocoder = new google.maps.Geocoder();
-                geocoder.geocode({
-                    address: location
-                }, function (results, status) {
-                    if (status === "OK" && results[0]) {
-                        const lat = results[0].geometry.location.lat();
-                        const lng = results[0].geometry.location.lng();
+            //     const geocoder = new google.maps.Geocoder();
+            //     geocoder.geocode({
+            //         address: location
+            //     }, function (results, status) {
+            //         if (status === "OK" && results[0]) {
+            //             const lat = results[0].geometry.location.lat();
+            //             const lng = results[0].geometry.location.lng();
 
-                        showUserLocationOnMap(lat, lng); // Mark on map
+            //             showUserLocationOnMap(lat, lng); // Mark on map
 
-                        // 🔥 AJAX call to get jobs
-                        fetch(`/job-search?title=${encodeURIComponent(title)}&location=${encodeURIComponent(location)}&lat=${lat}&lng=${lng}&radius=${radius / 1000}`, {
-                            headers: {
-                                'Accept': 'application/json'
-                            }
-                        })
-                            .then(res => {
-                                if (!res.ok) throw new Error("Network response was not OK");
-                                return res.json();
-                            })
-                            .then(data => {
-                                // Update URL without reload
-                                const newUrl = `/job-search?title=${encodeURIComponent(title)}&location=${encodeURIComponent(location)}&lat=${lat}&lng=${lng}&radius=${radius / 1000}`;
-                                history.pushState(null, "", newUrl);
+            //             // 🔥 AJAX call to get jobs
+            //             fetch(`/job-search?title=${encodeURIComponent(title)}&location=${encodeURIComponent(location)}&lat=${lat}&lng=${lng}&radius=${radius / 1000}`, {
+            //                 headers: {
+            //                     'Accept': 'application/json'
+            //                 }
+            //             })
+            //                 .then(res => {
+            //                     if (!res.ok) throw new Error("Network response was not OK");
+            //                     return res.json();
+            //                 })
+            //                 .then(data => {
+            //                     // Update URL without reload
+            //                     const newUrl = `/job-search?title=${encodeURIComponent(title)}&location=${encodeURIComponent(location)}&lat=${lat}&lng=${lng}&radius=${radius / 1000}`;
+            //                     history.pushState(null, "", newUrl);
 
-                                // Replace job list globally
-                                jobs.splice(0, jobs.length, ...data.jobs);
-                                // plotAllJobs();
-                                filterJobsByRadius(lat, lng, radius);
-                            })
-                            .catch(err => {
-                                console.error("❌ Failed to fetch jobs:", err);
-                                alert("Something went wrong while searching.");
-                            });
-                    } else {
-                        alert("Location not found.");
-                    }
-                });
-            });
+            //                     // Replace job list globally
+            //                     jobs.splice(0, jobs.length, ...data.jobs);
+            //                     // plotAllJobs();
+            //                     filterJobsByRadius(lat, lng, radius);
+            //                 })
+            //                 .catch(err => {
+            //                     console.error("❌ Failed to fetch jobs:", err);
+            //                     alert("Something went wrong while searching.");
+            //                 });
+            //         } else {
+            //             alert("Location not found.");
+            //         }
+            //     });
+            // });
 
         });
 

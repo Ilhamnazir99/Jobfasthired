@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Job;
+use App\Models\JobCategory;
 use App\Models\Skill;
 
 class JobController extends Controller
@@ -11,21 +12,23 @@ class JobController extends Controller
     // Show the job creation form
     public function create()
     {
+        $categories = JobCategory::orderBy('name')->get();
         $googleApiKey = config('app.google_maps_api_key');
-        return view('employer.job_create', compact('googleApiKey'));
+        return view('employer.job_create', compact('googleApiKey', 'categories'));
     }
 
     // Handle the job posting form submission
     public function store(Request $request)
     {
         $request->validate([
-            'title' => 'required',
-            'description' => 'required',
-            'location' => 'required',
-            'address' => 'required',
-            'latitude' => 'required|numeric',
-            'longitude' => 'required|numeric',
-            'salary' => 'required|numeric',
+            'title'         => 'required',
+            'category_id'   => 'required',
+            'description'   => 'required',
+            'location'      => 'required',
+            'address'       => 'required',
+            'latitude'      => 'required|numeric',
+            'longitude'     => 'required|numeric',
+            'salary'        => 'required|numeric',
         ]);
 
         // ✅ Validate schedule days: must include both start and end if active
@@ -59,17 +62,18 @@ class JobController extends Controller
 
         // ✅ Step 1: Create the job
         $job = Job::create([
-            'employer_id' => auth()->user()->id,
-            'title' => $request->title,
-            'description' => $request->description,
-            'location' => $request->location,
-            'address' => $request->address,
-            'latitude' => $request->latitude,
-            'longitude' => $request->longitude,
-            'salary' => $request->salary,
-            'schedule' => json_encode($validatedSchedule),
-            'category' => $request->category,
-            'status' => 'pending',
+            'employer_id'       => auth()->user()->id,
+            'title'             => $request->title,
+            'job_category_id'   => $request->category_id,
+            'description'       => $request->description,
+            'location'          => $request->location,
+            'address'           => $request->address,
+            'latitude'          => $request->latitude,
+            'longitude'         => $request->longitude,
+            'salary'            => $request->salary,
+            'schedule'          => json_encode($validatedSchedule),
+            'category'          => $request->category,
+            'status'            => 'pending',
         ]);
 
         // ✅ Step 2: Attach skills (unchanged)

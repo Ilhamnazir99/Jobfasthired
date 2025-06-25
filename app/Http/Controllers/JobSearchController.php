@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Job;
+use App\Models\JobCategory;
 use Carbon\Carbon;
 
 class JobSearchController extends Controller
@@ -13,7 +14,7 @@ class JobSearchController extends Controller
     {
         $query = Job::query()
             ->where('status', 'approved')
-            ->with(['employer', 'skills']); // ✅ Include skills
+            ->with(['employer', 'skills' ,'category']); // ✅ Include skills
 
         // Filter by job title
         if ($request->filled('title')) {
@@ -23,6 +24,15 @@ class JobSearchController extends Controller
         // Filter by location only if lat/lng/radius is not present
         if ($request->filled('location') && !$request->has(['lat', 'lng', 'radius'])) {
             $query->where('location', 'LIKE', '%' . $request->location . '%');
+        }
+
+        // Filter by job_category_id
+        if ($request->filled('category')) {
+            $query->where('job_category_id', $request->category);
+        }
+
+        if ($request->filled('min_salary')) {
+            $query->where('salary', '>=', $request->min_salary);
         }
 
         // Select only required columns for performance
@@ -35,12 +45,18 @@ class JobSearchController extends Controller
             'salary',
             'description',
             'schedule',
-            'employer_id'
+            'employer_id',
+            'job_category_id'
         )->get();
+
+        $categories = JobCategory::orderBy('name')->get();
 
         // Transform jobs to include schedule, weekly pay, company name, and skills
         $jobs->transform(function ($job) {
             $job->company_name = optional($job->employer)->company_name;
+
+            // Include category name
+            $job->category_name = optional($job->category)->name;
 
             // Decode schedule JSON
             $scheduleData = is_array($job->schedule)
@@ -77,6 +93,8 @@ class JobSearchController extends Controller
             return $job;
         });
 
+        \Log::info($jobs);
+
         // If it's an AJAX call or JSON requested
         if ($request->ajax() || $request->wantsJson()) {
             return response()->json([
@@ -84,7 +102,7 @@ class JobSearchController extends Controller
             ]);
         }
 
-        return view('job-search', compact('jobs'));
+        return view('job-search', compact('jobs', 'categories'));
     }
 
     // AJAX title suggestions for autocomplete
