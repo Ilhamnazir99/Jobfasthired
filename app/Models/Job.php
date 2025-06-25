@@ -23,9 +23,9 @@ class Job extends Model
     ];
 
     public function employer()
-{
-    return $this->belongsTo(User::class, 'employer_id')->where('role', 'employer');
-}
+    {
+        return $this->belongsTo(User::class, 'employer_id')->where('role', 'employer');
+    }
 
 
     public function applications()
@@ -37,5 +37,10 @@ class Job extends Model
     {
         return $this->belongsToMany(Skill::class, 'job_skill');
     }
-    
+
+    public function category()
+    {
+        return $this->belongsTo(JobCategory::class, 'job_category_id');
+    }
+
 }
