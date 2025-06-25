@@ -2,9 +2,33 @@
 
 @section('content')
 
+{{-- 🧭 Onboarding Script --}}
+<script src="https://unpkg.com/intro.js/minified/intro.min.js"></script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        if (!localStorage.getItem("onboarding_done")) {
+            introJs().setOptions({
+                showProgress: true,
+                exitOnOverlayClick: false,
+                showBullets: false,
+                nextLabel: 'Next →',
+                prevLabel: '← Back',
+                doneLabel: 'Finish 🎉',
+            }).oncomplete(() => {
+                localStorage.setItem("onboarding_done", "true");
+            }).onexit(() => {
+                localStorage.setItem("onboarding_done", "true");
+            }).start();
+        }
+    });
+</script>
+
 {{-- HERO + SEARCH --}}
 <div class="relative px-6 py-16 bg-cover bg-center bg-no-repeat"
-    style="background-image: url({{ asset('storage/my-background.jpg') }});">
+     style="background-image: url({{ asset('storage/my-background.jpg') }});"
+     data-step="1"
+     data-intro="Search jobs using keywords or your location!">
     <div class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-10 items-center text-white">
         <!-- TEXT + SEARCH -->
         <div>
@@ -17,31 +41,31 @@
 
             <!-- Search Form -->
             <form id="job-search-form" action="{{ route('student.dashboard')}}" method="GET"
-                class="flex flex-col md:flex-row md:items-center gap-4">
+                  class="flex flex-col md:flex-row md:items-center gap-4">
                 <input type="text" name="title" placeholder="Job title..." value="{{ request('title') }}"
-                    class="w-full md:w-1/3 p-3 border rounded-md shadow-sm focus:ring focus:ring-blue-200 text-black">
+                       class="w-full md:w-1/3 p-3 border rounded-md shadow-sm focus:ring focus:ring-blue-200 text-black">
 
                 <div class="relative w-full md:w-2/3">
                     <input type="text" id="location-input" name="location" placeholder="Location..."
-                        value="{{ request('location') }}"
-                        class="w-full p-3 pr-10 border rounded-md shadow-sm focus:ring focus:ring-blue-200 text-black">
+                           value="{{ request('location') }}"
+                           class="w-full p-3 pr-10 border rounded-md shadow-sm focus:ring focus:ring-blue-200 text-black">
 
                     <button type="button" id="use-location-btn"
-                        x-data="{ show: false, timeout: null }"
-                        x-on:mouseenter="show = true; clearTimeout(timeout); timeout = setTimeout(() => show = false, 2000)"
-                        class="absolute right-3 top-1/2 -translate-y-1/2 transform group"
-                        aria-label="Use your location">
+                            x-data="{ show: false, timeout: null }"
+                            x-on:mouseenter="show = true; clearTimeout(timeout); timeout = setTimeout(() => show = false, 2000)"
+                            class="absolute right-3 top-1/2 -translate-y-1/2 transform group"
+                            aria-label="Use your location">
                         <svg data-lucide="map-pin" class="w-5 h-5 stroke-blue-500 transition-colors duration-200"></svg>
                         <div x-show="show"
-                            x-transition
-                            class="absolute bottom-full mb-2 bg-black text-white text-xs px-2 py-1 rounded shadow whitespace-nowrap z-10">
+                             x-transition
+                             class="absolute bottom-full mb-2 bg-black text-white text-xs px-2 py-1 rounded shadow whitespace-nowrap z-10">
                             Your Location
                         </div>
                     </button>
                 </div>
 
                 <button type="button" id="search-btn"
-                    class="bg-blue-600 text-white px-6 py-3 rounded-md shadow hover:bg-blue-700 transition">
+                        class="bg-blue-600 text-white px-6 py-3 rounded-md shadow hover:bg-blue-700 transition">
                     Search
                 </button>
             </form>
@@ -60,28 +84,32 @@
 <div class="max-w-7xl mx-auto px-6 mt-12 grid grid-cols-1 md:grid-cols-3 gap-6">
 
     <!-- Job Listings -->
-    <div class="md:col-span-1 overflow-y-auto h-[500px] space-y-4">
+    <div class="md:col-span-1 overflow-y-auto h-[500px] space-y-4"
+         data-step="2"
+         data-intro="This is the job listing area. Click on any job to view more details.">
         <h2 class="text-xl font-semibold mb-4">Available Part-Time Jobs</h2>
         <div id="job-list" class="space-y-4">
             <div id="blade-job-list">
                 @forelse($jobs as $job)
-                
+
                 @empty
-                <p>No jobs found.</p>
+                    <p>No jobs found.</p>
                 @endforelse
             </div>
         </div>
     </div>
 
     <!-- Map Section -->
-    <div class="md:col-span-2">
+    <div class="md:col-span-2"
+         data-step="3"
+         data-intro="Use the interactive map to explore jobs based on your area. Adjust the radius to filter.">
         <h2 class="text-xl font-semibold mb-4">Map View</h2>
 
         <div class="relative rounded overflow-hidden border" style="height: 500px;">
             <div id="map" class="absolute inset-0 z-0"></div>
 
             <div id="radius-slider-container"
-                style="position: absolute; bottom: 16px; left: 50%; transform: translateX(-50%);
+                 style="position: absolute; bottom: 16px; left: 50%; transform: translateX(-50%);
                         background: white; padding: 6px 10px; border-radius: 8px;
                         box-shadow: 0 5px 15px rgba(0,0,0,0.15); width: 16rem; z-index: 999; text-align: center;">
                 <label for="radiusRange" class="text-sm font-medium">
@@ -91,17 +119,57 @@
             </div>
         </div>
 
-        <div id="job-details" class="mt-6 p-4 bg-white shadow rounded hidden">
-            <h3 class="text-lg font-bold" id="job-title">Job Title</h3>
-            <p class="text-sm text-gray-600" id="job-location">Location</p>
-            <p class="text-sm text-gray-600" id="job-salary">Salary: RM 0.00</p>
-            <button class="mt-3 bg-blue-600 text-white px-4 py-2 rounded" id="apply-btn">Apply Now</button>
-        </div>
+       <div id="job-details"
+     class="mt-6 p-6 bg-white shadow-xl rounded-lg hidden"
+     data-step="4"
+     data-intro="View full job details here after selecting a job from the list. Click 'Apply Now' when you're ready.">
+    <h3 class="text-2xl font-bold text-gray-800 mb-2" id="job-title">Job Title</h3>
+
+    <div class="flex items-center text-sm text-gray-600 mt-1">
+        <svg data-lucide="map-pin" class="w-4 h-4 mr-2 stroke-gray-500"></svg>
+        <span id="job-location">Location</span>
     </div>
 
+    <div class="flex items-center text-sm text-gray-600 mt-1">
+        <svg data-lucide="dollar-sign" class="w-4 h-4 mr-2 stroke-green-600"></svg>
+        <span id="job-salary">Salary: RM 0.00</span>
+    </div>
+
+    <div class="flex items-start text-sm text-gray-600 mt-3" id="job-schedule-container">
+        <svg data-lucide="calendar-clock" class="w-4 h-4 mr-2 mt-1 stroke-blue-500"></svg>
+        <div class="space-y-1" id="job-schedule"></div>
+    </div>
+
+    <div class="mt-4">
+        <h4 class="text-md font-semibold text-gray-700 mb-1">Job Description:</h4>
+        <p class="text-sm text-gray-600" id="job-description">No description provided.</p>
+    </div>
+
+    <div class="mt-4">
+        <h4 class="text-md font-semibold text-gray-700 mb-1">Required Skills:</h4>
+        <div id="job-skills" class="flex flex-wrap gap-2"></div>
+
+        <div class="mt-6">
+            <a href="#" id="apply-btn"
+               class="bg-blue-600 hover:bg-blue-700 text-white font-medium px-4 py-2 rounded transition">
+                Apply Now
+            </a>
+        </div>
+    </div>
 </div>
 
+    </div>
+</div>
+
+{{-- Optional: Add help button to restart the guide manually --}}
+<button onclick="introJs().start()" 
+        class="fixed bottom-6 right-6 bg-blue-600 text-white p-3 rounded-full shadow-lg hover:bg-blue-700 z-50"
+        title="Restart Onboarding Tour">
+    <svg data-lucide="help-circle" class="w-6 h-6"></svg>
+</button>
+
 @endsection
+
 
 
 
@@ -184,60 +252,78 @@
     //     });
     // }
 
-    function renderJobCard(job) {
-        const jobList = document.getElementById("job-list");
+      function renderJobCard(job) {
+    const jobList = document.getElementById("job-list");
+    const jobCard = document.createElement("div");
+    jobCard.className = "p-4 border rounded shadow-sm job-card cursor-pointer hover:bg-blue-50 transition";
+    jobCard.dataset.jobId = job.id;
 
-        const jobCard = document.createElement("div");
-        jobCard.className = "p-4 border rounded shadow-sm job-card cursor-pointer hover:bg-blue-50 transition";
-        jobCard.dataset.jobId = job.id;
+    // ✅ Extract schedule HTML (AM/PM conversion works here)
+    let scheduleHtml = '';
+    if (job.schedule && typeof job.schedule === 'object' && !Array.isArray(job.schedule)) {
+        scheduleHtml = Object.entries(job.schedule).map(([day, times]) => {
+            if (times.start && times.end) {
+                const start = formatTime24To12(times.start);
+                const end = formatTime24To12(times.end);
+                return `<div><strong>${day.charAt(0).toUpperCase() + day.slice(1)}:</strong> ${start} - ${end}</div>`;
+            }
+            return '';
+        }).join('');
+    }
 
-        jobCard.innerHTML = `
-            <h3 class="text-lg font-bold">${job.title}</h3>
+    // ✅ Keep your current structure, just inject `scheduleHtml`
+    jobCard.innerHTML = `
+        <h3 class="text-lg font-bold">${job.title}</h3>
 
-            ${job.company_name ? `
-                <p class="text-sm text-gray-500">${job.company_name}</p>
-            ` : ''}
+        ${job.company_name ? `<p class="text-sm text-gray-500">${job.company_name}</p>` : ''}
 
-            <div class="flex items-center text-sm text-gray-600 mt-1">
-                <svg data-lucide="map-pin" class="w-4 h-4 mr-1 stroke-gray-500"></svg>
-                <span>${job.location ?? 'Location not specified'}</span>
-            </div>
-
-            ${job.salary ? `
-                <div class="flex items-center text-sm text-gray-600 mt-1">
-                    <svg data-lucide="dollar-sign" class="w-4 h-4 mr-1 stroke-green-600"></svg>
-                    <span>RM ${parseFloat(job.salary).toFixed(2)} per hour</span>
-                </div>
-            ` : ''}
-
-            ${job.schedule && typeof job.schedule === 'object' && !Array.isArray(job.schedule) ? `
-        <div class="flex items-start text-sm text-gray-600 mt-1">
-            <svg data-lucide="calendar-clock" class="w-4 h-4 mr-1 mt-1 stroke-blue-500"></svg>
-            <div class="space-y-1">
-                ${Object.entries(job.schedule).map(([day, times]) => {
-                    if (times.start && times.end) {
-                        return `<div><strong>${day.charAt(0).toUpperCase() + day.slice(1)}:</strong> ${times.start} - ${times.end}</div>`;
-                    }
-                    return '';
-                }).join('')}
-            </div>
+        <div class="flex items-center text-sm text-gray-600 mt-1">
+            <svg data-lucide="map-pin" class="w-4 h-4 mr-1 stroke-gray-500"></svg>
+            <span>${job.location ?? 'Location not specified'}</span>
         </div>
-    ` : ''}
 
+        ${job.salary ? `
+            <div class="flex items-center text-sm text-gray-600 mt-1">
+                <svg data-lucide="dollar-sign" class="w-4 h-4 mr-1 stroke-green-600"></svg>
+                <span>RM ${parseFloat(job.salary).toFixed(2)} per hour</span>
+            </div>
+        ` : ''}
 
-            ${job.weekly_pay ? `
-                <div class="flex items-center text-sm text-gray-600 mt-1">
-                    <svg data-lucide="wallet" class="w-4 h-4 mr-1 stroke-yellow-600"></svg>
-                    <span>Est. Weekly Pay: RM ${job.weekly_pay}</span>
+        ${scheduleHtml ? `
+            <div class="flex items-start text-sm text-gray-600 mt-1">
+                <svg data-lucide="calendar-clock" class="w-4 h-4 mr-1 mt-1 stroke-blue-500"></svg>
+                <div class="space-y-1">
+                    ${scheduleHtml}
                 </div>
-            ` : ''}
-        `;
+            </div>
+        ` : ''}
 
-        jobCard.onclick = () => showJobOnMap(job.id);
-        jobList.appendChild(jobCard);
+        ${job.weekly_pay ? `
+            <div class="flex items-center text-sm text-gray-600 mt-1">
+                <svg data-lucide="wallet" class="w-4 h-4 mr-1 stroke-yellow-600"></svg>
+                <span>Est. Weekly Pay: RM ${job.weekly_pay}</span>
+            </div>
+        ` : ''}
+    `;
 
-        window.lucide?.createIcons({
-            icons: window.lucide?.icons
+    jobCard.onclick = () => showJobOnMap(job.id);
+    jobList.appendChild(jobCard);
+
+    window.lucide?.createIcons({
+        icons: window.lucide?.icons
+    });
+}
+
+
+
+    function formatTime24To12(timeStr) {
+        const [hour, minute] = timeStr.split(':');
+        const date = new Date();
+        date.setHours(parseInt(hour), parseInt(minute));
+        return date.toLocaleTimeString([], {
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: true
         });
     }
 
@@ -256,18 +342,66 @@
         }
     }
 
-    function showJobDetails(job) {
-        if (!job) return;
-        document.getElementById('job-details').classList.remove('hidden');
-        document.getElementById('job-title').innerText = job.title;
-        document.getElementById('job-location').innerText = job.location ?? 'Location not specified';
-        document.getElementById('job-salary').innerText = "Salary: RM " + (job.salary ?? 'Not specified');
-        document.getElementById('apply-btn').onclick = function() {
-        window.location.href = `/student/jobs/${job.id}/apply`;
-               
+function showJobDetails(job) {
 
-      };
+
+    if (!job) return;
+
+    document.getElementById('job-details').classList.remove('hidden');
+
+    document.getElementById('job-title').innerText = job.title;
+    document.getElementById('job-location').innerText = job.location ?? 'Location not specified';
+    document.getElementById('job-salary').innerText = job.salary ? `RM ${parseFloat(job.salary).toFixed(2)} per hour` : 'Not specified';
+    document.getElementById('job-description').innerText = job.description ?? 'No description provided.';
+
+    // Skills
+    const skillsContainer = document.getElementById('job-skills');
+skillsContainer.innerHTML = '';
+
+if (Array.isArray(job.skills) && job.skills.length > 0) {
+    job.skills.forEach(skill => {
+        const span = document.createElement('span');
+        span.className = 'inline-block bg-blue-100 text-blue-700 text-sm px-3 py-1 rounded-full mr-2 mb-2';
+        span.innerText = skill.name;
+        skillsContainer.appendChild(span);
+    });
+} else {
+    skillsContainer.innerHTML = '<span class="text-sm text-gray-400">No skills listed.</span>';
+}
+
+
+    // Schedule (structured format)
+    const scheduleContainer = document.getElementById('job-schedule');
+    scheduleContainer.innerHTML = '';
+    if (job.schedule && typeof job.schedule === 'object' && !Array.isArray(job.schedule)) {
+        Object.entries(job.schedule).forEach(([day, times]) => {
+            if (times.start && times.end) {
+                const start = formatTime24To12(times.start);
+                const end = formatTime24To12(times.end);
+                const div = document.createElement('div');
+                div.innerHTML = `<strong>${day.charAt(0).toUpperCase() + day.slice(1)}:</strong> ${start} - ${end}`;
+                scheduleContainer.appendChild(div);
+            }
+        });
+    } else {
+        scheduleContainer.innerHTML = '<span class="text-sm text-gray-400">No schedule provided.</span>';
     }
+
+    // Apply button
+    document.getElementById('apply-btn').onclick = function () {
+        @if (Auth::check() && Auth::user()->role === 'student')
+            window.location.href = `/student/jobs/${job.id}/apply`;
+        @else
+            window.location.href = `/login`;
+        @endif
+    };
+
+    // Re-render Lucide icons
+    window.lucide?.createIcons({
+        icons: window.lucide?.icons
+    });
+}
+
 
     function highlightJobCard(jobId) {
         document.querySelectorAll('.job-card').forEach(card => {

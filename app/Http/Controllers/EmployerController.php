@@ -80,17 +80,6 @@ class EmployerController extends Controller
 }
 
 
-    // Mark notification as read
-    public function markNotification(Request $request, $id)
-    {
-        $notification = auth()->user()->notifications()->findOrFail($id);
-        $notification->markAsRead();
-
-        return redirect()->back()->with([
-            'success' => 'Notification marked as read.',
-            'type' => 'success'
-        ]);
-    }
 
     public function viewApplications(Job $job)
     {
@@ -102,5 +91,39 @@ class EmployerController extends Controller
         $job->load('applications.student'); // eager load student details
         return view('employer.applications', compact('job'));
     }
+
+    public function notifications(Request $request)
+{
+    $filter = $request->query('filter', 'all');
+    $query = Auth::user()->notifications()->latest();
+
+    if ($filter === 'unread') {
+        $query->whereNull('read_at');
+    }
+
+    $notifications = $query->get();
+    return view('employer.notifications', compact('notifications', 'filter'));
+}
+
+public function markAsRead($id)
+{
+    $notification = Auth::user()->notifications()->findOrFail($id);
+    $notification->markAsRead();
+
+    return redirect()->back()->with('success', 'Notification marked as read.');
+}
+
+public function markAllAsRead()
+{
+    Auth::user()->unreadNotifications->markAsRead();
+    return back()->with('success', 'All notifications marked as read.');
+}
+
+public function clearAll()
+{
+    Auth::user()->notifications()->delete();
+    return back()->with('success', 'All notifications cleared.');
+}
+
     
 }

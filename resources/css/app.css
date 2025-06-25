@@ -1,3 +1,85 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* 🎨 Style the main tooltip box */
+.introjs-tooltip {
+  @apply bg-white text-gray-800 rounded-xl shadow-xl p-5 border border-blue-300 max-w-md font-sans text-sm;
+}
+
+/* 🖋️ Style the bold title in each tooltip step */
+.introjs-tooltip-title {
+  @apply text-lg font-bold text-blue-600 mb-2;
+}
+
+/* 📄 Style the description text */
+.introjs-tooltiptext {
+  @apply text-gray-700;
+}
+
+/* 🔘 Style the buttons: Back, Next, Done */
+.introjs-button {
+  @apply bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition;
+}
+
+/* 💡 Highlighted element border glow */
+.introjs-helperLayer {
+  border-radius: 1rem !important;
+  box-shadow: 0 0 0 4px rgba(59, 131, 246, 0.982) !important; /* blue-500 ring */
+}
+
+/* --- Intro.js Custom Styles --- */
+.introjs-tooltip {
+    border-radius: 16px !important;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2) !important;
+    padding: 20px 24px !important;
+    font-size: 15px;
+    color: #333;
+    background-color: #fff !important;
+    max-width: 350px;
+}
+
+.introjs-progressbar {
+    height: 6px !important;
+    background-color: #d1d5db !important;
+    border-radius: 4px;
+}
+.introjs-progress {
+    background-color: #2563eb !important;
+}
+
+.introjs-button {
+    border-radius: 8px !important;
+    padding: 8px 16px !important;
+    font-weight: 500;
+    font-size: 14px;
+    border: none !important;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.introjs-button.introjs-skipbutton {
+    background-color: transparent;
+    color: #6b7280 !important;
+}
+.introjs-button.introjs-prevbutton,
+.introjs-button.introjs-nextbutton,
+.introjs-button.introjs-donebutton {
+    background-color: #2563eb !important;
+    color: #fff !important;
+}
+.introjs-button:hover {
+    opacity: 0.9;
+}
+
+.introjs-bullets ul {
+    gap: 6px;
+}
+.introjs-bullets ul li a {
+    background-color: #d1d5db;
+    border-radius: 50%;
+    width: 8px;
+    height: 8px;
+}
+.introjs-bullets ul li a.active {
+    background-color: #2563eb !important;
+}

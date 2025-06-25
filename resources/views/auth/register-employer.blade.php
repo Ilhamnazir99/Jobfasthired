@@ -43,7 +43,7 @@
                     +60
                 </span>
                 <input type="tel" name="phone_number" id="phone_number"
-                    value="{{ old('phone_number') }}"
+                    value="{{ ltrim(old('phone_number'), '+60') }}"
                     pattern="[0-9]{9,10}" placeholder="123456789" required
                     class="mt-0 w-full border border-gray-300 rounded-r-md focus:ring focus:ring-blue-200">
             </div>

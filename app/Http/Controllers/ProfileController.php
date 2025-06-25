@@ -128,26 +128,38 @@ class ProfileController extends Controller
     /**
      * Store a new skill for the student.
      */
-    public function storeSkill(Request $request): RedirectResponse
-    {
-        $request->validate([
-            'skill' => 'required|string|max:255',
-        ]);
+public function storeSkill(Request $request)
+{
+    $request->validate([
+        'name' => 'required|string|max:255',
+    ]);
 
-        $user = Auth::user();
+    $user = Auth::user();
 
-        if ($user->role !== 'student') {
-            abort(403);
-        }
-
-        $skill = Skill::firstOrCreate(['name' => $request->skill]);
-
-        if (!$user->skills->contains($skill->id)) {
-            $user->skills()->attach($skill->id);
-        }
-
-        return back()->with('success', 'Skill added.');
+    if ($user->role !== 'student') {
+        return response()->json(['status' => 'error', 'message' => 'Unauthorized'], 403);
     }
+
+    // Create or get existing skill
+    $skill = Skill::firstOrCreate(['name' => $request->name]);
+
+    // Prevent duplicate
+    if (!$user->skills()->where('skill_id', $skill->id)->exists()) {
+        $user->skills()->attach($skill->id);
+    } else {
+        return response()->json([
+            'status' => 'error',
+            'message' => 'Skill already exists.',
+        ], 409);
+    }
+
+    return response()->json([
+        'status' => 'success',
+        'skill' => $skill,
+    ]);
+}
+
+
 
     /**
      * Remove a skill from the student's profile.

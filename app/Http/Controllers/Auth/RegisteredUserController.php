@@ -30,29 +30,23 @@ class RegisteredUserController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
-        // Validate the incoming request
         $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:' . User::class],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
-            'role' => ['required', 'in:student,employer,admin'],  // Validate role selection
+            'role' => ['required', 'in:student,employer,admin'],
         ]);
 
-        // Create the new user with the selected role
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
-            'role' => $request->role,  // Save the selected role
+            'role' => $request->role,
         ]);
 
-        // Trigger the Registered event
         event(new Registered($user));
-
-        // Log the user in
         Auth::login($user);
 
-        // Redirect to home (or you can add role-based redirection here)
         return redirect(RouteServiceProvider::redirectToRoleBasedDashboard());
     }
 
@@ -71,73 +65,78 @@ class RegisteredUserController extends Controller
     /**
      * Handle student registration submission.
      */
-   public function registerStudent(Request $request): RedirectResponse
-{
-    $request->validate([
-        'name' => 'required|string|max:255',
-        'email' => 'required|string|email|max:255|unique:users',
-        'password' => 'required|string|confirmed|min:8',
-        'phone_number' => 'required|string|max:20|unique:users',
-        'address' => 'required|string|max:255',
-    ]);
+    public function registerStudent(Request $request): RedirectResponse
+    {
+        // ✅ Normalize phone number first
+        $normalizedPhone = '+60' . ltrim($request->phone_number, '0');
+        $request->merge(['phone_number' => $normalizedPhone]);
 
-    $user = User::create([
-        'name' => $request->name,
-        'email' => $request->email,
-        'password' => Hash::make($request->password),
-        'role' => 'student',
-        'phone_number' => $request->phone_number,
-        'address' => $request->address,
-    ]);
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|string|email|max:255|unique:users',
+            'password' => 'required|string|confirmed|min:8',
+            'phone_number' => 'required|string|max:20|unique:users',
+            'address' => 'required|string|max:255',
+        ]);
 
-    event(new Registered($user));
+        $user = User::create([
+            'name' => $request->name,
+            'email' => $request->email,
+            'password' => Hash::make($request->password),
+            'role' => 'student',
+            'phone_number' => $normalizedPhone,
+            'address' => $request->address,
+        ]);
 
-    Auth::login($user);
+        event(new Registered($user));
+        Auth::login($user);
 
-    return redirect()->route('student.dashboard');
-}
-
-
-    /**
- * Show the employer registration form.
- */
-public function showEmployerRegisterForm(): View
-{
-    if (auth()->check()) {
-        return redirect(RouteServiceProvider::redirectToRoleBasedDashboard());
+        return redirect()->route('student.dashboard');
     }
 
-    return view('auth.register-employer');
-}
+    /**
+     * Show the employer registration form.
+     */
+    public function showEmployerRegisterForm(): View
+    {
+        if (auth()->check()) {
+            return redirect(RouteServiceProvider::redirectToRoleBasedDashboard());
+        }
 
-/**
- * Handle employer registration submission.
- */
-public function registerEmployer(Request $request): RedirectResponse
-{
-    $request->validate([
-        'name' => 'required|string|max:255',
-        'email' => 'required|string|email|max:255|unique:users',
-        'company_name' => 'required|string|max:255',
-        'phone_number' => 'required|string|max:20|unique:users',
-        'address' => 'required|string',
-        'password' => 'required|string|confirmed|min:8',
-    ]);
+        return view('auth.register-employer');
+    }
 
-    $user = User::create([
-        'name' => $request->name,
-        'email' => $request->email,
-        'company_name' => $request->company_name,
-        'phone_number' => $request->phone_number,
-        'address' => $request->address,
-        'password' => Hash::make($request->password),
-        'role' => 'employer',
-    ]);
+    /**
+     * Handle employer registration submission.
+     */
+    public function registerEmployer(Request $request): RedirectResponse
+    {
+        // ✅ Normalize phone number first
+        $normalizedPhone = '+60' . ltrim($request->phone_number, '0');
+        $request->merge(['phone_number' => $normalizedPhone]);
 
-    event(new Registered($user));
-    Auth::login($user);
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|string|email|max:255|unique:users',
+            'company_name' => 'required|string|max:255',
+            'phone_number' => 'required|string|max:20|unique:users',
+            'address' => 'required|string',
+            'password' => 'required|string|confirmed|min:8',
+        ]);
 
-    return redirect()->route('employer.dashboard');
-}
+        $user = User::create([
+            'name' => $request->name,
+            'email' => $request->email,
+            'company_name' => $request->company_name,
+            'phone_number' => $normalizedPhone,
+            'address' => $request->address,
+            'password' => Hash::make($request->password),
+            'role' => 'employer',
+        ]);
 
+        event(new Registered($user));
+        Auth::login($user);
+
+        return redirect()->route('employer.dashboard');
+    }
 }

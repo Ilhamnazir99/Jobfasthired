@@ -98,8 +98,14 @@ Route::middleware('auth')->group(function () {
     Route::patch('/employer/application/{id}', [EmployerController::class, 'updateApplication'])->name('employer.updateApplication');
 
     // Employer Mark Notification as Read
-    Route::post('/employer/notifications/{id}/mark', [EmployerController::class, 'markNotification'])->name('employer.markNotification');
-    
+  // ✅ Employer Notifications (Clean & Consistent)
+Route::prefix('employer/notifications')->middleware('auth')->group(function () {
+    Route::get('/', [EmployerController::class, 'notifications'])->name('employer.notifications');
+    Route::post('/{id}/read', [EmployerController::class, 'markAsRead'])->name('employer.notifications.mark');
+    Route::post('/mark-all-read', [EmployerController::class, 'markAllAsRead'])->name('employer.notifications.markAllAsRead');
+    Route::delete('/clear', [EmployerController::class, 'clearAll'])->name('employer.notifications.clearAll');
+});
+
 
     /* ===============================
    /* ===============================
@@ -159,6 +165,12 @@ Route::middleware(['auth', 'admin'])->group(function () {
     // Student Notifications
     Route::get('/student/notifications', [StudentController::class, 'notifications'])->name('student.notifications');
     Route::post('/student/notifications/{id}/read', [StudentController::class, 'markNotificationAsRead'])->name('student.notifications.markAsRead');
+    Route::post('/student/notifications/mark-all', [StudentController::class, 'markAllAsRead'])
+    ->name('student.notifications.markAllAsRead');
+    Route::delete('/student/notifications/clear-all', [StudentController::class, 'clearAllNotifications'])
+    ->name('student.notifications.clearAll');
+
+
 
     
 });

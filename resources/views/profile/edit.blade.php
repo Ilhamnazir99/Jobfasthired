@@ -4,40 +4,41 @@
 <div class="max-w-4xl mx-auto py-8">
     <h2 class="text-3xl font-bold text-gray-800 mb-8">My Profile</h2>
 
-    {{-- Profile Overview Header --}}
-    @php $user = Auth::user(); @endphp
+  {{-- Profile Overview Header --}}
+@php $user = Auth::user(); @endphp
 
-    <div class="mb-8 p-8 bg-white shadow rounded-lg text-center dark:bg-white dark:text-black">
-        <div class="flex flex-col items-center justify-center">
-            <div class="relative">
-                @if ($user->profile_image)
-                    <img src="{{ asset('images/' . $user->profile_image) }}" alt="Profile Image" class="w-32 h-32 rounded-full border-4 border-white shadow object-cover">
-                @else
-                    <img src="{{ asset('default-avatar.png') }}" alt="Default Avatar" class="w-32 h-32 rounded-full border-4 border-white shadow object-cover">
-                @endif
-
-                <!-- Upload icon -->
-                <label for="profile_image" class="absolute bottom-0 right-0 bg-indigo-600 text-white p-1.5 rounded-full cursor-pointer shadow hover:bg-indigo-700 transition">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 10l4.553 2.276A1 1 0 0120 13.118v2.764a1 1 0 01-.447.842L15 19.118M9 10L4.447 12.276A1 1 0 004 13.118v2.764a1 1 0 00.447.842L9 19.118" />
-                    </svg>
-                    <input id="profile_image" type="file" name="profile_image" class="hidden" onchange="this.form.submit()" form="profile-image-form">
-                </label>
-            </div>
-
-            <h2 class="mt-4 text-2xl font-semibold text-gray-900">{{ $user->name }}</h2>
-
-            @if($user->role === 'student')
-                <div class="mt-3 flex flex-wrap justify-center gap-2">
-                    @foreach($user->skills as $skill)
-                        <span class="bg-indigo-100 text-indigo-800 px-3 py-1 rounded-full text-sm font-medium">
-                            {{ $skill->name }}
-                        </span>
-                    @endforeach
-                </div>
+<div class="mb-8 p-8 bg-white shadow rounded-lg text-center dark:bg-white dark:text-black">
+    <div class="flex flex-col items-center justify-center">
+        <div class="relative">
+            @if ($user->profile_image)
+                <img src="{{ asset('images/' . $user->profile_image) }}" alt="Profile Image" class="w-32 h-32 rounded-full border-4 border-white shadow object-cover">
+            @else
+                <img src="{{ asset('images/default-avatar.png') }}" alt="Default Avatar" class="w-32 h-32 rounded-full border-4 border-white shadow object-cover">
             @endif
+
+            <!-- Upload icon (Lucide) -->
+            <label for="profile_image"
+                   class="absolute bottom-0 right-0 bg-indigo-600 text-white p-1.5 rounded-full cursor-pointer shadow hover:bg-indigo-700 transition">
+                <i data-lucide="camera" class="w-5 h-5"></i>
+                <input id="profile_image" type="file" name="profile_image"
+                       class="hidden" onchange="this.form.submit()" form="profile-image-form">
+            </label>
         </div>
+
+        <h2 class="mt-4 text-2xl font-semibold text-gray-900">{{ $user->name }}</h2>
+
+        @if($user->role === 'student')
+            <div class="mt-3 flex flex-wrap justify-center gap-2">
+                @foreach($user->skills as $skill)
+                    <span class="bg-indigo-100 text-indigo-800 px-3 py-1 rounded-full text-sm font-medium">
+                        {{ $skill->name }}
+                    </span>
+                @endforeach
+            </div>
+        @endif
     </div>
+</div>
+
 
     {{-- Hidden form for image update --}}
     <form id="profile-image-form" method="POST" action="{{ route('profile.image.update') }}" enctype="multipart/form-data">
@@ -84,7 +85,7 @@
                         type="text"
                         id="new-skill"
                         name="name"
-                        placeholder="Enter skill (e.g., Laravel)"
+                        placeholder="Enter skill (e.g., Time Management, Excel)"
                         class="w-full border border-gray-300 rounded px-3 py-2 text-gray-900"
                     >
                     <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded">

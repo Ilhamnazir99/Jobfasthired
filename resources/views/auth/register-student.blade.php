@@ -27,7 +27,7 @@
                 <input 
                     type="tel" 
                     name="phone_number" 
-                    value="{{ old('phone_number') }}"
+                    value="{{ ltrim(old('phone_number'), '+60') }}"
                     pattern="[0-9]{9,10}" 
                     placeholder="123456789" 
                     required 

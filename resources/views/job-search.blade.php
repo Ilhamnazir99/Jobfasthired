@@ -163,14 +163,61 @@
     <h4 class="text-md font-semibold text-gray-700 mb-1">Required Skills:</h4>
     <div id="job-skills" class="flex flex-wrap gap-2"></div>
 </div>
-
-
-    
-
-    
     <button class="mt-6 bg-blue-600 hover:bg-blue-700 text-white font-medium px-4 py-2 rounded transition" id="apply-btn">Apply Now</button>
 </div>
+</div>
+</div> {{-- END OF GRID LAYOUT --}}
 
+{{-- ✅ How It Works Section (With Animation + Improved Text) --}}
+<section class="mt-16 bg-gradient-to-b from-gray-50 to-white py-16">
+    <div class="max-w-7xl mx-auto px-4 text-center">
+        <h2 class="text-4xl font-bold text-gray-800 mb-10" data-aos="fade-up">How JobFastHired Works</h2>
+
+        <div class="flex flex-wrap justify-center gap-10">
+            <!-- Step 1 -->
+            <div class="w-full sm:w-[300px] bg-white shadow-lg rounded-2xl p-6 transition-transform hover:scale-105"
+                 data-aos="fade-up" data-aos-delay="100">
+                <div class="flex items-center mb-4">
+                    <div class="bg-blue-100 text-blue-600 p-2 rounded-full">
+                        <svg data-lucide="user-plus" class="w-6 h-6"></svg>
+                    </div>
+                    <h3 class="ml-4 text-lg font-semibold text-gray-700">Sign Up</h3>
+                </div>
+                <p class="text-gray-600 text-sm leading-relaxed">
+                    Quickly create your profile as a student or employer to begin your journey.
+                </p>
+            </div>
+
+            <!-- Step 2 -->
+            <div class="w-full sm:w-[300px] bg-white shadow-lg rounded-2xl p-6 transition-transform hover:scale-105"
+                 data-aos="fade-up" data-aos-delay="200">
+                <div class="flex items-center mb-4">
+                    <div class="bg-green-100 text-green-600 p-2 rounded-full">
+                        <svg data-lucide="map-pin" class="w-6 h-6"></svg>
+                    </div>
+                    <h3 class="ml-4 text-lg font-semibold text-gray-700">Explore Nearby Jobs</h3>
+                </div>
+                <p class="text-gray-600 text-sm leading-relaxed">
+                    Use our interactive Google Map to discover part-time jobs around your area.
+                </p>
+            </div>
+
+            <!-- Step 3 -->
+            <div class="w-full sm:w-[300px] bg-white shadow-lg rounded-2xl p-6 transition-transform hover:scale-105"
+                 data-aos="fade-up" data-aos-delay="300">
+                <div class="flex items-center mb-4">
+                    <div class="bg-purple-100 text-purple-600 p-2 rounded-full">
+                        <svg data-lucide="briefcase" class="w-6 h-6"></svg>
+                    </div>
+                    <h3 class="ml-4 text-lg font-semibold text-gray-700">Apply & Get Hired</h3>
+                </div>
+                <p class="text-gray-600 text-sm leading-relaxed">
+                    Submit your application with one click and get hired faster than ever.
+                </p>
+            </div>
+        </div>
+    </div>
+</section>
 
 
 @endsection

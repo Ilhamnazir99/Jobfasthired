@@ -41,7 +41,17 @@
         //         subtree: true
         //     });
         // });
+
+
+        
     </script>
+
+    <!-- Intro.js Styles & Script -->
+<link href="https://unpkg.com/intro.js/minified/introjs.min.css" rel="stylesheet">
+<script src="https://unpkg.com/intro.js/minified/intro.min.js"></script>
+
+
+
 </head>
 <body class="font-sans antialiased">
     <div class="min-h-screen bg-white-100">
@@ -61,7 +71,11 @@
             @yield('content')
         </main>
 
+        
+
         @yield('scripts')
     </div>
 </body>
+   {{-- ✅ Include Footer --}}
+        @include('layouts.footer')
 </html>

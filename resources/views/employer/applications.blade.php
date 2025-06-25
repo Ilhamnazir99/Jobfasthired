@@ -40,11 +40,12 @@
                 <div class="flex justify-between items-center cursor-pointer" onclick="toggleDetails('{{ $collapseId }}', '{{ $arrowId }}')">
                     <div>
                         <div class="flex items-center gap-3">
-                            @if($student->profile_image)
-                                <img src="{{ asset('storage/' . $student->profile_image) }}" alt="Profile Image" class="w-10 h-10 rounded-full object-cover border">
-                            @else
-                                <img src="{{ asset('default-avatar.png') }}" alt="Default Avatar" class="w-10 h-10 rounded-full object-cover border">
-                            @endif
+                         @if($student->profile_image)
+                            <img src="{{ asset('images/' . $student->profile_image) }}" alt="Profile Image" class="w-10 h-10 rounded-full object-cover border">
+                        @else
+                            <img src="{{ asset('images/default-avatar.png') }}" alt="Default Avatar" class="w-10 h-10 rounded-full object-cover border">
+                        @endif
+
                             <p class="font-semibold text-lg">{{ $student->name }}</p>
                         </div>
                         <p class="text-sm text-gray-500 mt-1 italic">Applied: {{ $application->created_at->format('M d, Y') }}</p>
@@ -117,11 +118,12 @@
                 <div class="flex justify-between items-center cursor-pointer" onclick="toggleDetails('{{ $collapseId }}', '{{ $arrowId }}')">
                     <div>
                         <div class="flex items-center gap-3">
-                            @if($student->profile_image)
-                                <img src="{{ asset('storage/' . $student->profile_image) }}" alt="Profile Image" class="w-10 h-10 rounded-full object-cover border">
-                            @else
-                                <img src="{{ asset('default-avatar.png') }}" alt="Default Avatar" class="w-10 h-10 rounded-full object-cover border">
-                            @endif
+                        @if($student->profile_image)
+                            <img src="{{ asset('images/' . $student->profile_image) }}" alt="Profile Image" class="w-10 h-10 rounded-full object-cover border">
+                        @else
+                            <img src="{{ asset('images/default-avatar.png') }}" alt="Default Avatar" class="w-10 h-10 rounded-full object-cover border">
+                        @endif
+
                             <p class="font-semibold text-lg">{{ $student->name }}</p>
                         </div>
                         <p class="text-sm text-gray-500 mt-1 italic">Applied: {{ $application->created_at->format('M d, Y') }}</p>

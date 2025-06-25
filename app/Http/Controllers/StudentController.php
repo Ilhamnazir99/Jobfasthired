@@ -10,14 +10,16 @@ use App\Models\Skill;
 use App\Notifications\JobApplicationNotification;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Str;
 
 class StudentController extends Controller
 {
     // Student Dashboard (Job Listings)
-  public function index()
+public function index()
 {
-    $jobs = Job::with('employer') // load employer details
+    $jobs = Job::query()
         ->where('status', 'approved')
+        ->with(['employer', 'skills']) // ✅ include employer and skills
         ->select(
             'id',
             'title',
@@ -32,34 +34,48 @@ class StudentController extends Controller
         ->get();
 
     $jobs->transform(function ($job) {
+        // Add employer name
         $job->company_name = optional($job->employer)->company_name;
 
-        $scheduleData = is_array($job->schedule)
-            ? $job->schedule
-            : json_decode($job->schedule, true);
-        $job->schedule = $scheduleData;
+       // Safely decode schedule
+$scheduleData = is_array($job->schedule)
+    ? $job->schedule
+    : json_decode($job->schedule, true) ?? [];
 
+$job->schedule = json_decode(json_encode($scheduleData), true);
+
+
+        // Calculate total weekly hours
         $totalHours = 0;
-        if ($scheduleData) {
-            foreach ($scheduleData as $times) {
-                if (isset($times['start'], $times['end'])) {
-                    try {
-                        $start = \Carbon\Carbon::createFromFormat('H:i', $times['start']);
-                        $end = \Carbon\Carbon::createFromFormat('H:i', $times['end']);
-                        $totalHours += $end->diffInMinutes($start) / 60;
-                    } catch (\Exception $e) {
-                        // skip invalid time
-                    }
+        foreach ($scheduleData as $times) {
+            if (isset($times['start'], $times['end'])) {
+                try {
+                    $start = \Carbon\Carbon::createFromFormat('H:i', $times['start']);
+                    $end = \Carbon\Carbon::createFromFormat('H:i', $times['end']);
+                    $totalHours += $end->diffInMinutes($start) / 60;
+                } catch (\Exception $e) {
+                    // skip invalid time
                 }
             }
         }
 
+        // Compute weekly pay
         $job->weekly_pay = $job->salary ? number_format($job->salary * $totalHours, 2) : null;
+
+        // Format skills as array of { id, name }
+        $job->skills = $job->skills->map(function ($skill) {
+            return [
+                'id' => $skill->id,
+                'name' => $skill->name
+            ];
+        });
+
         return $job;
     });
 
     return view('student.dashboard', compact('jobs'));
 }
+
 
 
     // Student Apply for a Job (Application Form)
@@ -137,14 +153,7 @@ class StudentController extends Controller
         return view('student.applied_jobs', compact('applications'));
     }
 
-    // Student Notifications (In-App Notifications)
-    public function notifications()
-    {
-        // Fetch all notifications for the student
-        $notifications = Auth::user()->notifications()->latest()->get();
 
-        return view('student.notifications', compact('notifications'));
-    }
 
     // Mark Notification as Read (Optional)
     public function markNotificationAsRead($id)
@@ -204,22 +213,84 @@ class StudentController extends Controller
         ]);
     }
 
-    public function updateProfile(Request $request)
+  
+
+public function updateProfile(Request $request)
 {
+    \Log::info('Request payload:', $request->all()); // 🔍 log input
+
+    // ✅ Normalize phone number ONLY if filled
+    if ($request->filled('phone_number')) {
+        $rawPhone = preg_replace('/\D/', '', $request->phone_number); // remove non-digits
+
+        if (Str::startsWith($rawPhone, '0')) {
+            $normalized = '+60' . substr($rawPhone, 1);
+        } elseif (Str::startsWith($rawPhone, '60')) {
+            $normalized = '+' . $rawPhone;
+        } elseif (Str::startsWith($rawPhone, '1')) {
+            $normalized = '+60' . $rawPhone;
+        } else {
+            $normalized = $request->phone_number; // fallback (just keep it)
+        }
+
+        // Replace input with normalized version
+        $request->merge(['phone_number' => $normalized]);
+    }
+
+    // ✅ Your original validation
     $request->validate([
         'name' => 'required|string|max:255',
         'email' => 'required|email|max:255',
+        'phone_number' => [
+            'nullable',
+            'regex:/^(\+?60|01)[0-9\s\-]{8,15}$/',
+            'max:20',
+            'unique:users,phone_number,' . Auth::id(),
+        ],
     ]);
 
     $user = Auth::user();
     $user->name = $request->name;
     $user->email = $request->email;
+    $user->phone_number = $request->phone_number;
     $user->save();
+
+    \Log::info('Updated user profile:', $user->toArray()); // ✅ log result
 
     return response()->json([
         'status' => 'success',
         'message' => 'Profile updated successfully.',
     ]);
 }
+
+
+
+public function markAllAsRead()
+{
+    auth()->user()->unreadNotifications->markAsRead();
+    return back()->with('success', 'All notifications marked as read.');
+}
+
+public function notifications(Request $request)
+{
+    $filter = $request->query('filter', 'all'); // default = all
+
+    $query = Auth::user()->notifications()->latest();
+
+    if ($filter === 'unread') {
+        $query->whereNull('read_at');
+    }
+
+    $notifications = $query->get();
+
+    return view('student.notifications', compact('notifications', 'filter'));
+}
+public function clearAllNotifications()
+{
+    Auth::user()->notifications()->delete();
+
+    return redirect()->back()->with('success', 'All notifications cleared.');
+}
+
 
 }

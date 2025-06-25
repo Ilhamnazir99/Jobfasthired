@@ -11,14 +11,14 @@
 
         <div class="flex items-center gap-4">
             @if($notifications->isNotEmpty())
-                <form method="POST" action="{{ route('student.notifications.markAllAsRead') }}">
+                <form method="POST" action="{{ route('employer.notifications.markAllAsRead') }}">
                     @csrf
                     <button class="text-sm text-blue-600 hover:text-blue-800 hover:underline transition">
                         Mark all as read
                     </button>
                 </form>
 
-                <form method="POST" action="{{ route('student.notifications.clearAll') }}" onsubmit="return confirm('Are you sure you want to clear all notifications?');">
+                <form method="POST" action="{{ route('employer.notifications.clearAll') }}" onsubmit="return confirm('Are you sure you want to clear all notifications?');">
                     @csrf
                     @method('DELETE')
                     <button class="text-sm text-red-500 hover:text-red-700 hover:underline transition">
@@ -31,11 +31,11 @@
 
     {{-- Filter Tabs --}}
     <div class="flex gap-6 mb-6 border-b border-gray-200 pb-2">
-        <a href="{{ route('student.notifications', ['filter' => 'all']) }}"
+        <a href="{{ route('employer.notifications', ['filter' => 'all']) }}"
            class="text-sm {{ $filter === 'all' ? 'text-blue-600 font-semibold border-b-2 border-blue-600' : 'text-gray-600 hover:text-blue-600' }}">
             All
         </a>
-        <a href="{{ route('student.notifications', ['filter' => 'unread']) }}"
+        <a href="{{ route('employer.notifications', ['filter' => 'unread']) }}"
            class="text-sm {{ $filter === 'unread' ? 'text-blue-600 font-semibold border-b-2 border-blue-600' : 'text-gray-600 hover:text-blue-600' }}">
             Unread
         </a>
@@ -58,19 +58,13 @@
             @foreach($notifications as $notification)
                 @php
                     $isUnread = is_null($notification->read_at);
-                    $type = $notification->data['type'] ?? 'general';
-                    $message = $notification->data['message'] ?? 'You have a new notification.';
-                    $icon = match($type) {
-                        'accepted' => 'check-circle',
-                        'rejected' => 'x-circle',
-                        default => 'bell',
-                    };
+                    $message = $notification->data['student_name'] . ' applied for ' . $notification->data['job_title'];
                 @endphp
 
                 <li class="p-4 border rounded-md flex items-start justify-between gap-4 transition hover:shadow-sm {{ $isUnread ? 'bg-blue-50 border-blue-200' : 'bg-white' }}">
                     <div class="flex items-start gap-3">
                         <div class="relative">
-                            <svg data-lucide="{{ $icon }}" class="w-6 h-6 {{ $isUnread ? 'text-blue-600' : 'text-gray-400' }}"></svg>
+                            <svg data-lucide="user-check" class="w-6 h-6 {{ $isUnread ? 'text-blue-600' : 'text-gray-400' }}"></svg>
                             @if($isUnread)
                                 <span class="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full animate-ping"></span>
                             @endif
@@ -83,7 +77,7 @@
 
                     <div class="text-sm flex items-center gap-2">
                         @if($isUnread)
-                            <form method="POST" action="{{ route('student.notifications.markAsRead', $notification->id) }}">
+                            <form method="POST" action="{{ route('employer.notifications.mark', $notification->id) }}">
                                 @csrf
                                 <button class="text-blue-600 hover:underline" type="submit">
                                     Mark as read
@@ -100,4 +94,9 @@
         </ul>
     @endif
 </div>
+
+<script src="https://unpkg.com/lucide@latest"></script>
+<script>
+    lucide.createIcons();
+</script>
 @endsection
