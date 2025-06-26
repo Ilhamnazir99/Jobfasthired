@@ -16,57 +16,131 @@
             </p>
 
             <!-- Search Form -->
-            <form id="job-search-form" action="{{ route('job.search') }}" method="GET"
-                class="flex flex-col md:flex-row md:items-center gap-4">
-                <input type="text" name="title" placeholder="Job title..." value="{{ request('title') }}"
-                    class="w-full md:w-1/3 p-3 border rounded-md shadow-sm focus:ring focus:ring-blue-200 text-black">
+            <form id="job-search-form" action="{{ route('job.search') }}" method="GET"  class="flex flex-col gap-3">
+     
+    <div class="flex flex-col md:flex-row md:items-center gap-4">
+        <input type="text" name="title" placeholder="Job title..." value="{{ request('title') }}"
+            class="w-full md:w-1/3 p-3 border rounded-md shadow-sm focus:ring focus:ring-blue-200 text-black">
 
-                <div class="relative w-full md:w-2/3">
-                    <input type="text" id="location-input" name="location" placeholder="Location..."
-                        value="{{ request('location') }}"
-                        class="w-full p-3 pr-10 border rounded-md shadow-sm focus:ring focus:ring-blue-200 text-black">
+        <div class="relative w-full md:w-1/3">
+            <input type="text" id="location-input" name="location" placeholder="Location..."
+                value="{{ request('location') }}"
+                class="w-full p-3 pr-10 border rounded-md shadow-sm focus:ring focus:ring-blue-200 text-black">
 
-                    <button type="button" id="use-location-btn"
-                        x-data="{ show: false, timeout: null }"
-                        x-on:mouseenter="show = true; clearTimeout(timeout); timeout = setTimeout(() => show = false, 2000)"
-                        class="absolute right-3 top-1/2 -translate-y-1/2 transform group"
-                        aria-label="Use your location">
-                        <svg data-lucide="map-pin" class="w-5 h-5 stroke-blue-500 transition-colors duration-200"></svg>
-                        <div x-show="show"
-                            x-transition
-                            class="absolute bottom-full mb-2 bg-black text-white text-xs px-2 py-1 rounded shadow whitespace-nowrap z-10">
-                            Your Location
-                        </div>
-                    </button>
+            <button type="button" id="use-location-btn"
+                x-data="{ show: false, timeout: null }"
+                x-on:mouseenter="show = true; clearTimeout(timeout); timeout = setTimeout(() => show = false, 2000)"
+                class="absolute right-3 top-1/2 -translate-y-1/2 transform group"
+                aria-label="Use your location">
+                <svg data-lucide="map-pin" class="w-5 h-5 stroke-blue-500 transition-colors duration-200"></svg>
+                <div x-show="show" x-transition
+                    class="absolute bottom-full mb-2 bg-black text-white text-xs px-2 py-1 rounded shadow whitespace-nowrap z-10">
+                    Your Location
                 </div>
+            </button>
+        </div>
 
-                <!-- Category Filter Dropdown -->
-                <div class="relative">
-                    <button type="button" id="category-btn"
-                        class="bg-white text-black border border-gray-300 px-4 py-2 rounded-md shadow-sm flex items-center space-x-2">
-                        <span>Category</span>
-                        <svg data-lucide="chevron-down" class="w-4 h-4"></svg>
-                    </button>
+        <button type="button" id="search-btn"
+            class="bg-blue-600 text-white px-6 py-3 rounded-md shadow hover:bg-blue-700 transition">
+            Search
+        </button>
+    </div>
 
-                    <div id="category-dropdown"
-                        class="absolute z-10 mt-2 w-56 bg-white border border-gray-200 rounded-lg shadow-lg hidden max-h-64 overflow-y-auto">
-                        @foreach($categories as $cat)
-                            <label class="flex items-center px-4 py-2 hover:bg-gray-50">
-                                <input type="checkbox" name="categories[]" value="{{ $cat->id }}"
-                                    {{ in_array($cat->id, request('categories', [])) ? 'checked' : '' }}
-                                    class="mr-2">
-                                {{ $cat->name }}
-                            </label>
-                        @endforeach
-                    </div>
-                </div>
+    <p id="more-options-btn"
+        class="mt-2 inline-flex items-center text-white text-sm cursor-pointer hover:underline hover:text-blue-300">
+        <span>More options</span>
+        <svg data-lucide="sliders-horizontal" class="w-4 h-4 ml-1"></svg>
+    </p>
 
-
-                <button type="button" id="search-btn"
-                    class="bg-blue-600 text-white px-6 py-3 rounded-md shadow hover:bg-blue-700 transition">
-                    Search
+    <div id="more-options-panel" class="hidden w-full">
+        <div class="flex flex-col md:flex-row md:items-start gap-4 mt-2">
+            <!-- Category Filter -->
+            <div class="relative">
+                <button type="button" id="category-btn"
+                    class="bg-white text-black border border-gray-300 px-4 py-2 rounded-md shadow-sm flex items-center space-x-2">
+                    <span>Category</span>
+                    <svg data-lucide="chevron-down" class="w-4 h-4"></svg>
                 </button>
-            </form>
+
+                <div id="category-dropdown"
+                    class="absolute z-10 mt-2 w-56 bg-white border border-gray-200 rounded-lg shadow-lg hidden max-h-64 overflow-y-auto">
+                    @foreach($categories as $cat)
+                        <label class="flex items-center px-4 py-2 text-black hover:bg-gray-50">
+                            <input type="checkbox" name="categories[]" value="{{ $cat->id }}"
+                                {{ in_array($cat->id, request('categories', [])) ? 'checked' : '' }}
+                                class="mr-2">
+                            {{ $cat->name }}
+                        </label>
+                    @endforeach
+                </div>
+            </div>
+
+            <!-- Salary Filter -->
+            <div class="relative" x-data="{ open: false, mode: '{{ request('salary_mode', 'hourly') }}' }">
+                <button type="button" @click="open = !open"
+                    class="bg-white text-black border border-gray-300 px-4 py-2 rounded-md shadow-sm flex items-center space-x-2">
+                    <span>Salary</span>
+                    <svg data-lucide="chevron-down" class="w-4 h-4"></svg>
+                </button>
+
+                <div x-show="open" @click.outside="open = false"
+                    class="absolute z-20 mt-2 w-72 md:w-[400px] bg-white border border-gray-200 rounded-lg shadow-lg p-4 text-black"
+                    x-transition>
+
+                    <!-- Tabs -->
+                    <div class="flex border-b mb-4">
+                        <button type="button"
+                            :class="mode === 'hourly' ? 'text-blue-600 font-semibold border-b-2 border-blue-600' : 'text-gray-500'"
+                            @click="mode = 'hourly'"
+                            class="px-4 py-2 focus:outline-none">Hourly</button>
+                        <button type="button"
+                            :class="mode === 'weekly' ? 'text-blue-600 font-semibold border-b-2 border-blue-600' : 'text-gray-500'"
+                            @click="mode = 'weekly'"
+                            class="px-4 py-2 focus:outline-none">Weekly</button>
+                    </div>
+
+                    <input type="hidden" name="salary_mode" :value="mode">
+
+                    <template x-if="mode === 'hourly'">
+                        <div class="flex flex-col gap-3">
+                            <div>
+                                <label class="block text-sm text-gray-600 mb-1">From • MYR</label>
+                                <input type="number" name="min_hourly" placeholder="e.g. 10" step="0.1"
+                                    value="{{ request('min_hourly') }}"
+                                    class="w-full border border-gray-300 rounded-md px-3 py-2 shadow-sm focus:ring focus:ring-blue-200">
+                            </div>
+                            <div>
+                                <label class="block text-sm text-gray-600 mb-1">To • MYR</label>
+                                <input type="number" name="max_hourly" placeholder="e.g. 30" step="0.1"
+                                    value="{{ request('max_hourly') }}"
+                                    class="w-full border border-gray-300 rounded-md px-3 py-2 shadow-sm focus:ring focus:ring-blue-200">
+                            </div>
+                        </div>
+                    </template>
+
+                    <template x-if="mode === 'weekly'">
+                        <div class="flex flex-col gap-3">
+                            <div>
+                                <label class="block text-sm text-gray-600 mb-1">From • MYR</label>
+                                <input type="number" name="min_weekly" placeholder="e.g. 100" step="1"
+                                    value="{{ request('min_weekly') }}"
+                                    class="w-full border border-gray-300 rounded-md px-3 py-2 shadow-sm focus:ring focus:ring-blue-200">
+                            </div>
+                            <div>
+                                <label class="block text-sm text-gray-600 mb-1">To • MYR</label>
+                                <input type="number" name="max_weekly" placeholder="e.g. 500" step="1"
+                                    value="{{ request('max_weekly') }}"
+                                    class="w-full border border-gray-300 rounded-md px-3 py-2 shadow-sm focus:ring focus:ring-blue-200">
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+
+
 
             <div id="suggestions" class="mt-3 hidden bg-white border rounded shadow-md p-3 text-sm text-black"></div>
         </div>
@@ -751,56 +825,7 @@ if (Array.isArray(job.skills) && job.skills.length > 0) {
             document.getElementById("search-btn").click(); // trigger the search manually
         });
 
-        // 4. AJAX SEARCH BTN — already exists in your code, but we enhance it here:
-        document.getElementById('search-btn').addEventListener('click', function() {
-            const title = document.querySelector('input[name="title"]').value.trim();
-            const location = document.querySelector('input[name="location"]').value.trim();
-            const radius = currentRadius;
-
-            if (!location) {
-                alert("Please enter a location or use 'Your Location'.");
-                return;
-            }
-
-            const geocoder = new google.maps.Geocoder();
-            geocoder.geocode({
-                address: location
-            }, function(results, status) {
-                if (status === "OK" && results[0]) {
-                    const lat = results[0].geometry.location.lat();
-                    const lng = results[0].geometry.location.lng();
-
-                    showUserLocationOnMap(lat, lng); // Mark on map
-
-                    // 🔥 AJAX call to get jobs
-                    fetch(`/job-search?title=${encodeURIComponent(title)}&location=${encodeURIComponent(location)}&lat=${lat}&lng=${lng}&radius=${radius / 1000}`, {
-                            headers: {
-                                'Accept': 'application/json'
-                            }
-                        })
-                        .then(res => {
-                            if (!res.ok) throw new Error("Network response was not OK");
-                            return res.json();
-                        })
-                        .then(data => {
-                            // Update URL without reload
-                            const newUrl = `/job-search?title=${encodeURIComponent(title)}&location=${encodeURIComponent(location)}&lat=${lat}&lng=${lng}&radius=${radius / 1000}`;
-                            history.pushState(null, "", newUrl);
-
-                            // Replace job list globally
-                            jobs.splice(0, jobs.length, ...data.jobs);
-                            // plotAllJobs();
-                            filterJobsByRadius(lat, lng, radius);
-                        })
-                        .catch(err => {
-                            console.error("❌ Failed to fetch jobs:", err);
-                            alert("Something went wrong while searching.");
-                        });
-                } else {
-                    alert("Location not found.");
-                }
-            });
-        });
+        
 
     });
 
@@ -810,31 +835,50 @@ if (Array.isArray(job.skills) && job.skills.length > 0) {
     window.initMap = initMap;
 </script>
 
+
 <script>
     document.addEventListener('DOMContentLoaded', function () {
-        const catBtn = document.getElementById('category-btn');
-        const catDropdown = document.getElementById('category-dropdown');
+        const moreOptionsBtn = document.getElementById('more-options-btn');
+        const moreOptionsPanel = document.getElementById('more-options-panel');
+        const categoryBtn = document.getElementById('category-btn');
+        const categoryDropdown = document.getElementById('category-dropdown');
         const searchBtn = document.getElementById('search-btn');
         const searchForm = document.getElementById('job-search-form');
 
-        // Toggle dropdown
-        catBtn.addEventListener('click', () => {
-            catDropdown.classList.toggle('hidden');
+        // ✅ Toggle "More options" panel
+        moreOptionsBtn?.addEventListener('click', () => {
+            moreOptionsPanel?.classList.toggle('hidden');
         });
 
-        // Hide dropdown when clicking outside
+        // ✅ Toggle Category Dropdown (stop bubbling so click inside is allowed)
+        categoryBtn?.addEventListener('click', (e) => {
+            e.stopPropagation();
+            categoryDropdown?.classList.toggle('hidden');
+        });
+
+        // ✅ Prevent dropdown from closing if clicking inside
+        categoryDropdown?.addEventListener('click', (e) => {
+            e.stopPropagation();
+        });
+
+        // ✅ Close dropdown if clicking outside
         document.addEventListener('click', function (e) {
-            if (!catBtn.contains(e.target) && !catDropdown.contains(e.target)) {
-                catDropdown.classList.add('hidden');
+            if (!categoryBtn.contains(e.target) && !categoryDropdown.contains(e.target)) {
+                categoryDropdown.classList.add('hidden');
             }
         });
 
-        // ✅ Manually submit form when clicking "Search" button
-        searchBtn.addEventListener('click', function () {
-            searchForm.submit();
+        // ✅ Manual form submission via button
+        searchBtn?.addEventListener('click', function () {
+            searchForm?.submit();
         });
     });
 </script>
+
+
+
+
+
 
 
 

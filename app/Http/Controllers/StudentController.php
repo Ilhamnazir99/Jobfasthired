@@ -11,41 +11,93 @@ use App\Notifications\JobApplicationNotification;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Str;
+use App\Models\JobCategory; 
 
 class StudentController extends Controller
 {
     // Student Dashboard (Job Listings)
-public function index()
+public function index(Request $request)
 {
-    $jobs = Job::query()
+    $query = Job::query()
         ->where('status', 'approved')
-        ->with(['employer', 'skills']) // ✅ include employer and skills
-        ->select(
-            'id',
-            'title',
-            'location',
-            'latitude',
-            'longitude',
-            'salary',
-            'description',
-            'schedule',
-            'employer_id'
-        )
-        ->get();
+        ->with(['employer', 'skills', 'category']);
 
+    // 🔍 Filter by job title
+    if ($request->filled('title')) {
+        $query->where('title', 'LIKE', $request->title . '%');
+    }
+
+    // 📍 Filter by location
+    if ($request->filled('location') && !$request->has(['lat', 'lng', 'radius'])) {
+        $query->where('location', 'LIKE', '%' . $request->location . '%');
+    }
+
+    // 🗂️ Filter by job category
+    if ($request->filled('categories')) {
+        $query->whereIn('job_category_id', $request->categories);
+    }
+
+    // 💰 Filter by salary (hourly only at SQL level)
+    if ($request->filled('salary_mode') && $request->salary_mode === 'hourly') {
+        if ($request->filled('min_hourly')) {
+            $query->where('salary', '>=', $request->min_hourly);
+        }
+        if ($request->filled('max_hourly')) {
+            $query->where('salary', '<=', $request->max_hourly);
+        }
+    }
+
+    // 📦 Initial fetch
+    $jobs = $query->select(
+        'id',
+        'title',
+        'location',
+        'latitude',
+        'longitude',
+        'salary',
+        'description',
+        'schedule',
+        'employer_id',
+        'job_category_id'
+    )->get();
+
+    // 🧠 Apply weekly salary filtering on collection
+    if ($request->filled('salary_mode') && $request->salary_mode === 'weekly') {
+        $jobs = $jobs->filter(function ($job) use ($request) {
+            $scheduleData = is_array($job->schedule)
+                ? $job->schedule
+                : json_decode($job->schedule, true) ?? [];
+
+            $totalHours = 0;
+            foreach ($scheduleData as $times) {
+                if (isset($times['start'], $times['end'])) {
+                    try {
+                        $start = \Carbon\Carbon::createFromFormat('H:i', $times['start']);
+                        $end = \Carbon\Carbon::createFromFormat('H:i', $times['end']);
+                        $totalHours += $end->diffInMinutes($start) / 60;
+                    } catch (\Exception $e) {}
+                }
+            }
+
+            $weeklyPay = $job->salary * $totalHours;
+            $minWeekly = $request->min_weekly ?? 0;
+            $maxWeekly = $request->max_weekly ?? INF;
+
+            return $weeklyPay >= $minWeekly && $weeklyPay <= $maxWeekly;
+        })->values(); // Reset collection keys
+    }
+
+    // 🔄 Transform job for frontend use
     $jobs->transform(function ($job) {
-        // Add employer name
         $job->company_name = optional($job->employer)->company_name;
+        $job->category = $job->category ? ['name' => $job->category->name] : null;
 
-       // Safely decode schedule
-$scheduleData = is_array($job->schedule)
-    ? $job->schedule
-    : json_decode($job->schedule, true) ?? [];
+        $scheduleData = is_array($job->schedule)
+            ? $job->schedule
+            : json_decode($job->schedule, true) ?? [];
 
-$job->schedule = json_decode(json_encode($scheduleData), true);
+        $job->schedule = json_decode(json_encode($scheduleData), true);
 
-
-        // Calculate total weekly hours
         $totalHours = 0;
         foreach ($scheduleData as $times) {
             if (isset($times['start'], $times['end'])) {
@@ -53,28 +105,26 @@ $job->schedule = json_decode(json_encode($scheduleData), true);
                     $start = \Carbon\Carbon::createFromFormat('H:i', $times['start']);
                     $end = \Carbon\Carbon::createFromFormat('H:i', $times['end']);
                     $totalHours += $end->diffInMinutes($start) / 60;
-                } catch (\Exception $e) {
-                    // skip invalid time
-                }
+                } catch (\Exception $e) {}
             }
         }
 
-        // Compute weekly pay
         $job->weekly_pay = $job->salary ? number_format($job->salary * $totalHours, 2) : null;
 
-        // Format skills as array of { id, name }
-        $job->skills = $job->skills->map(function ($skill) {
-            return [
-                'id' => $skill->id,
-                'name' => $skill->name
-            ];
-        });
+        $job->skills = $job->skills->map(fn($skill) => [
+            'id' => $skill->id,
+            'name' => $skill->name
+        ]);
 
         return $job;
     });
 
-    return view('student.dashboard', compact('jobs'));
+    // 📤 Send to view
+    $categories = JobCategory::all();
+    return view('student.dashboard', compact('jobs', 'categories'));
 }
+
+
 
 
 

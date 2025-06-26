@@ -1,92 +1,178 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="max-w-6xl mx-auto p-6 bg-white rounded shadow">
-    <h2 class="text-2xl font-bold mb-6">Apply for Job: {{ $job->title }}</h2>
-    <p class="text-gray-700 mb-6">Location: {{ $job->location }}</p>
+<div class="max-w-5xl mx-auto px-6 py-8">
+        <!-- 🔙 Back Button -->
+    <a href="{{ route('job.search') }}"
+       class="inline-flex items-center mb-6 text-sm text-blue-600 hover:underline hover:text-blue-800 font-medium">
+        <svg data-lucide="arrow-left" class="w-4 h-4 mr-1 stroke-blue-600"></svg>
+        Back to Job Search
+    </a>
+
+
+
+    <h2 class="text-3xl font-bold text-gray-800 mb-6">📄 Apply for: <span class="text-blue-700">{{ $job->title }}</span></h2>
+
+    <!-- 📍 Job Meta (Enhanced) -->
+<div class="mb-8 p-6 bg-blue-50 border-l-4 border-blue-400 rounded shadow-sm text-gray-700">
+    <div class="flex items-center mb-2 text-sm">
+        <svg data-lucide="map-pin" class="w-5 h-5 mr-2 stroke-blue-500"></svg>
+        <strong class="mr-1">Location:</strong> {{ $job->location ?? 'Not specified' }}
+    </div>
+
+    <div class="flex items-center mb-2 text-sm">
+        <svg data-lucide="tag" class="w-5 h-5 mr-2 stroke-purple-600"></svg>
+        <strong class="mr-1">Category:</strong> {{ $job->category->name ?? 'N/A' }}
+    </div>
+
+    <div class="flex items-center mb-2 text-sm">
+        <svg data-lucide="building" class="w-5 h-5 mr-2 stroke-gray-700"></svg>
+        <strong class="mr-1">Company:</strong> {{ optional($job->employer)->company_name ?? 'N/A' }}
+    </div>
+
+    <div class="flex items-center mb-2 text-sm">
+        <svg data-lucide="dollar-sign" class="w-5 h-5 mr-2 stroke-green-600"></svg>
+        <strong class="mr-1">Hourly Pay:</strong> RM {{ number_format($job->salary, 2) }}
+    </div>
+
+    @php
+        $scheduleData = is_array($job->schedule) ? $job->schedule : json_decode($job->schedule, true) ?? [];
+        $totalHours = 0;
+        foreach ($scheduleData as $day => $times) {
+            if (isset($times['start'], $times['end'])) {
+                try {
+                    $start = \Carbon\Carbon::createFromFormat('H:i', $times['start']);
+                    $end = \Carbon\Carbon::createFromFormat('H:i', $times['end']);
+                    $totalHours += $end->diffInMinutes($start) / 60;
+                } catch (Exception $e) {}
+            }
+        }
+    @endphp
+
+    <div class="flex items-center mb-2 text-sm">
+        <svg data-lucide="wallet" class="w-5 h-5 mr-2 stroke-yellow-600"></svg>
+        <strong class="mr-1">Estimated Weekly Pay:</strong> RM {{ number_format($job->salary * $totalHours, 2) }}
+    </div>
+
+    @if (!empty($scheduleData))
+        <div class="flex items-start mt-2 text-sm">
+            <svg data-lucide="calendar-clock" class="w-5 h-5 mr-2 mt-1 stroke-blue-500"></svg>
+            <div>
+                <strong class="block mb-1">Schedule:</strong>
+                <div class="grid grid-cols-2 gap-x-6 gap-y-1">
+                    @foreach ($scheduleData as $day => $times)
+                        @if (!empty($times['start']) && !empty($times['end']))
+                            @php
+                                $start = \Carbon\Carbon::createFromFormat('H:i', $times['start'])->format('g:i A');
+                                $end = \Carbon\Carbon::createFromFormat('H:i', $times['end'])->format('g:i A');
+                            @endphp
+                            <div><strong>{{ ucfirst($day) }}:</strong> {{ $start }} - {{ $end }}</div>
+                        @endif
+                    @endforeach
+                </div>
+            </div>
+        </div>
+    @endif
+</div>
+
 
     <form action="{{ route('student.jobs.submit', $job->id) }}" method="POST" id="application-form">
         @csrf
 
-        {{-- PROFILE SECTION --}}
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-            {{-- Left: Profile Summary --}}
-            <div class="bg-gray-50 p-4 rounded shadow border">
-                <h3 class="text-xl font-semibold mb-4">Profile Summary</h3>
-                <p class="mb-2"><strong>Name:</strong> <span id="summary-name">{{ Auth::user()->name }}</span></p>
-                <p class="mb-2"><strong>Email:</strong> <span id="summary-email">{{ Auth::user()->email }}</span></p>
-                <p class="mb-2"><strong>Phone:</strong> <span id="summary-phone">{{ Auth::user()->phone_number ?? 'N/A' }}</span></p>
-                <button type="button" onclick="toggleEdit()" class="mt-4 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
-                    Edit Profile
-                </button>
-            </div>
+        
 
-            {{-- Right: Editable Profile --}}
-            <div id="edit-profile" class="hidden bg-white p-4 rounded shadow border">
-                <h3 class="text-xl font-semibold mb-4">Edit Profile</h3>
+   <!-- 👤 Profile Section -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+    <!-- ✅ Summary -->
+    <div class="bg-white border rounded-lg p-5 shadow">
+        <h3 class="text-xl font-semibold text-gray-800 mb-4">Profile Summary</h3>
 
-                <div class="mb-4">
-                    <label for="name" class="block text-sm font-medium text-gray-700">Name</label>
-                    <input type="text" id="name" name="name" value="{{ old('name', Auth::user()->name) }}"
-                        class="w-full p-2 border border-gray-300 rounded focus:ring focus:ring-blue-200">
-                </div>
+        <p class="mb-2"><strong>Name:</strong> <span id="summary-name">{{ Auth::user()->name }}</span></p>
+        <p class="mb-2"><strong>Email:</strong> <span id="summary-email">{{ Auth::user()->email }}</span></p>
+        <p class="mb-2"><strong>Phone:</strong> <span id="summary-phone">{{ Auth::user()->phone_number ?? 'N/A' }}</span></p>
 
-                <div class="mb-4">
-                    <label for="email" class="block text-sm font-medium text-gray-700">Email</label>
-                    <input type="email" id="email" name="email" value="{{ old('email', Auth::user()->email) }}"
-                        class="w-full p-2 border border-gray-300 rounded bg-gray-100 cursor-not-allowed" readonly>
-                </div>
-
-                <div class="mb-4">
-                    <label for="phone_number" class="block text-sm font-medium text-gray-700">Phone Number</label>
-                    <input type="text" id="phone_number" name="phone_number" value="{{ old('phone_number', Auth::user()->phone_number) }}"
-                        class="w-full p-2 border border-gray-300 rounded focus:ring focus:ring-blue-200"
-                        placeholder="e.g. 0123456789 or +60123456789">
-                </div>
-
-                <button type="button" onclick="saveProfile()" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
-                    Save Changes
-                </button>
-            </div>
-        </div>
-
-        {{-- SKILLS SECTION --}}
-        <div class="mb-8">
-            <h3 class="text-lg font-semibold mb-3">Your Valuable Skills</h3>
-
-            <div id="skills-list" class="flex flex-wrap gap-2 mb-4">
-                @foreach (Auth::user()->skills as $skill)
-                    <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm flex items-center">
-                        {{ $skill->name }}
-                        <button type="button" class="ml-2 text-red-500 hover:text-red-700" onclick="removeSkill({{ $skill->id }}, event)">
-                            &times;
-                        </button>
-                    </span>
-                @endforeach
-            </div>
-
-            <div class="flex gap-2">
-                <input type="text" id="new-skill" class="w-full border border-gray-300 rounded px-3 py-2"
-                    placeholder="Add a valuable skill (e.g., Time Management, Excel)">
-                <button type="button" onclick="addSkill()" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
-                    Add Skill
-                </button>
-            </div>
-        </div>
-
-        {{-- SUBMIT BUTTON --}}
-        <div class="text-right mt-8">
-            <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded font-medium">
-                Submit Application
+        <div class="flex justify-end mt-4">
+            <button type="button" onclick="toggleEdit()"
+                    class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded shadow flex items-center gap-2">
+                <svg data-lucide="pencil" class="w-4 h-4 stroke-white"></svg> Edit Profile
             </button>
         </div>
+    </div>
+
+    <!-- ✅ Edit -->
+    <div id="edit-profile" class="hidden bg-white border rounded-lg p-5 shadow">
+        <h3 class="text-xl font-semibold text-gray-800 mb-4">Edit Profile</h3>
+
+        <label class="block mb-3">
+            <span class="text-sm text-gray-600">Name</span>
+            <input type="text" name="name" id="name" value="{{ old('name', Auth::user()->name) }}"
+                   class="w-full mt-1 border rounded px-3 py-2 focus:ring focus:ring-blue-200">
+        </label>
+
+        <label class="block mb-3">
+            <span class="text-sm text-gray-600">Email</span>
+            <input type="email" name="email" id="email" readonly
+                   value="{{ old('email', Auth::user()->email) }}"
+                   class="w-full mt-1 border rounded px-3 py-2 bg-gray-100 text-gray-500 cursor-not-allowed">
+        </label>
+
+        <label class="block mb-4">
+            <span class="text-sm text-gray-600">Phone Number</span>
+            <input type="text" name="phone_number" id="phone_number"
+                   value="{{ old('phone_number', Auth::user()->phone_number) }}"
+                   placeholder="e.g. 0123456789"
+                   class="w-full mt-1 border rounded px-3 py-2 focus:ring focus:ring-blue-200">
+        </label>
+
+        <div class="flex justify-end">
+            <button type="button" onclick="saveProfile()"
+                    class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded shadow flex items-center gap-2">
+                <svg data-lucide="save" class="w-4 h-4 stroke-white"></svg> Save Changes
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- 🧠 Skills (Icon Removed) -->
+<div class="bg-white border rounded-lg p-5 shadow mb-8">
+    <h3 class="text-lg font-semibold text-gray-800 mb-3">Your Valuable Skills</h3>
+
+    <div id="skills-list" class="flex flex-wrap gap-2 mb-4">
+        @foreach (Auth::user()->skills as $skill)
+            <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm flex items-center">
+                {{ $skill->name }}
+                <button type="button" onclick="removeSkill({{ $skill->id }}, event)"
+                        class="ml-2 text-red-500 hover:text-red-700 font-bold">
+                    &times;
+                </button>
+            </span>
+        @endforeach
+    </div>
+
+    <div class="flex gap-2 justify-end">
+        <input type="text" id="new-skill"
+               class="flex-1 border border-gray-300 rounded px-3 py-2"
+               placeholder="Add a skill (e.g. Excel, Communication)">
+        <button type="button" onclick="addSkill()"
+                class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded flex items-center gap-2">
+            <svg data-lucide="plus" class="w-4 h-4 stroke-white"></svg> Add Skill
+        </button>
+    </div>
+</div>
+
+<!-- ✅ Submit -->
+<div class="flex justify-end">
+    <button type="submit"
+            class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded font-semibold shadow flex items-center gap-2">
+        <svg data-lucide="send" class="w-5 h-5 stroke-white"></svg> Submit Application
+    </button>
+</div>
+
     </form>
 </div>
 
-{{-- CSRF Token --}}
+{{-- Scripts --}}
 <meta name="csrf-token" content="{{ csrf_token() }}">
-
-{{-- JavaScript --}}
 <script>
     function toggleEdit() {
         document.getElementById('edit-profile').classList.toggle('hidden');
@@ -117,7 +203,6 @@
                 alert('Failed to update profile');
             }
         }).catch(err => {
-            console.error('Error:', err);
             alert('Something went wrong updating profile.');
         });
     }
@@ -137,14 +222,11 @@
         })
         .then(response => response.json())
         .then(() => location.reload())
-        .catch(error => {
-            console.error('Add Skill Error:', error);
-            alert('Error adding skill');
-        });
+        .catch(() => alert('Error adding skill'));
     }
 
     function removeSkill(skillId, event) {
-        if (!confirm('Are you sure you want to remove this skill?')) return;
+        if (!confirm('Remove this skill?')) return;
 
         fetch(`/profile/skills/${skillId}`, {
             method: 'DELETE',
@@ -161,10 +243,7 @@
                 alert('Failed to remove skill.');
             }
         })
-        .catch(error => {
-            console.error('Remove Skill Error:', error);
-            alert('An error occurred while removing the skill.');
-        });
+        .catch(() => alert('Error removing skill.'));
     }
 </script>
 @endsection

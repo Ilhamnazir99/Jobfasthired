@@ -57,12 +57,6 @@
 </div>
 
 
-{{-- Optional category text input --}}
-<div id="custom-category-box" class="mt-2 hidden">
-    <label class="block text-gray-700 font-semibold mb-2">Specify Other Category</label>
-    <input type="text" name="custom_category" id="custom-category-input" class="w-full border border-gray-300 px-4 py-2 rounded" placeholder="e.g. Babysitting">
-</div>
-
 
 
 
@@ -97,10 +91,10 @@
 
             {{-- Skills --}}
             <div>
-               <label class="block text-gray-700 font-semibold mb-2">Skills (Optional)</label>
+               <label class="block text-gray-700 font-semibold mb-2">Required or Preferred Skills</label>
                 <div id="skill-tags" class="flex flex-wrap gap-2 mb-2"></div>
                 <div class="flex gap-2">
-                    <input type="text" id="new-skill" class="flex-grow border border-gray-300 px-3 py-2 rounded" placeholder="Enter skill (e.g. Laravel)">
+                    <input type="text" id="new-skill" class="flex-grow border border-gray-300 px-3 py-2 rounded" placeholder="Enter skill (e.g. Communication)">
                     <button type="button" onclick="addSkill()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded">Add Skill</button>
                 </div>
             </div>

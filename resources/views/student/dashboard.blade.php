@@ -24,51 +24,173 @@
     });
 </script>
 
+@if (session('success'))
+    <div 
+        x-data="{ show: true }" 
+        x-init="setTimeout(() => show = false, 4000)" 
+        x-show="show"
+        x-transition
+        class="mb-4 px-4 py-3 bg-green-100 border border-green-400 text-green-800 rounded shadow"
+    >
+        🎉 {{ session('success') }}
+    </div>
+@endif
+
+@if (session('error'))
+    <div 
+        x-data="{ show: true }" 
+        x-init="setTimeout(() => show = false, 4000)" 
+        x-show="show"
+        x-transition
+        class="mb-4 px-4 py-3 bg-red-100 border border-red-400 text-red-800 rounded shadow"
+    >
+        ⚠️ {{ session('error') }}
+    </div>
+@endif
+
+
 {{-- HERO + SEARCH --}}
 <div class="relative px-6 py-16 bg-cover bg-center bg-no-repeat"
      style="background-image: url({{ asset('images/my-background.jpg') }});"
      data-step="1"
-     data-intro="Search jobs using keywords or your location!">
+     data-intro="Start by searching jobs by title, location, or category. You can also use your current location.">
     <div class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-10 items-center text-white">
         <!-- TEXT + SEARCH -->
         <div>
             <h2 class="text-4xl font-extrabold mb-4 leading-tight">
-                Find a job that suits<br>your interests and skills.
+               Discover part-time jobs near you.
             </h2>
             <p class="mb-8 text-white/90">
-                Thousands of part-time jobs are waiting for you. Search by location or keyword.
+                Get matched with local jobs that fit your interests and skills. Search by location or keyword.
             </p>
+<!-- Search Form -->
+<form id="job-search-form" action="{{ route('student.dashboard') }}" method="GET"  class="flex flex-col gap-3">
+     
+    <div class="flex flex-col md:flex-row md:items-center gap-4">
+        <input type="text" name="title" placeholder="Job title..." value="{{ request('title') }}"
+            class="w-full md:w-1/3 p-3 border rounded-md shadow-sm focus:ring focus:ring-blue-200 text-black">
 
-            <!-- Search Form -->
-            <form id="job-search-form" action="{{ route('student.dashboard')}}" method="GET"
-                  class="flex flex-col md:flex-row md:items-center gap-4">
-                <input type="text" name="title" placeholder="Job title..." value="{{ request('title') }}"
-                       class="w-full md:w-1/3 p-3 border rounded-md shadow-sm focus:ring focus:ring-blue-200 text-black">
+        <div class="relative w-full md:w-1/3">
+            <input type="text" id="location-input" name="location" placeholder="Location..."
+                value="{{ request('location') }}"
+                class="w-full p-3 pr-10 border rounded-md shadow-sm focus:ring focus:ring-blue-200 text-black">
 
-                <div class="relative w-full md:w-2/3">
-                    <input type="text" id="location-input" name="location" placeholder="Location..."
-                           value="{{ request('location') }}"
-                           class="w-full p-3 pr-10 border rounded-md shadow-sm focus:ring focus:ring-blue-200 text-black">
-
-                    <button type="button" id="use-location-btn"
-                            x-data="{ show: false, timeout: null }"
-                            x-on:mouseenter="show = true; clearTimeout(timeout); timeout = setTimeout(() => show = false, 2000)"
-                            class="absolute right-3 top-1/2 -translate-y-1/2 transform group"
-                            aria-label="Use your location">
-                        <svg data-lucide="map-pin" class="w-5 h-5 stroke-blue-500 transition-colors duration-200"></svg>
-                        <div x-show="show"
-                             x-transition
-                             class="absolute bottom-full mb-2 bg-black text-white text-xs px-2 py-1 rounded shadow whitespace-nowrap z-10">
-                            Your Location
-                        </div>
-                    </button>
+            <button type="button" id="use-location-btn"
+                x-data="{ show: false, timeout: null }"
+                x-on:mouseenter="show = true; clearTimeout(timeout); timeout = setTimeout(() => show = false, 2000)"
+                class="absolute right-3 top-1/2 -translate-y-1/2 transform group"
+                aria-label="Use your location">
+                <svg data-lucide="map-pin" class="w-5 h-5 stroke-blue-500 transition-colors duration-200"></svg>
+                <div x-show="show" x-transition
+                    class="absolute bottom-full mb-2 bg-black text-white text-xs px-2 py-1 rounded shadow whitespace-nowrap z-10">
+                    Your Location
                 </div>
+            </button>
+        </div>
 
-                <button type="button" id="search-btn"
-                        class="bg-blue-600 text-white px-6 py-3 rounded-md shadow hover:bg-blue-700 transition">
-                    Search
+        <button type="button" id="search-btn"
+            class="bg-blue-600 text-white px-6 py-3 rounded-md shadow hover:bg-blue-700 transition">
+            Search
+        </button>
+    </div>
+
+    <p id="more-options-btn"
+        class="mt-2 inline-flex items-center text-white text-sm cursor-pointer hover:underline hover:text-blue-300">
+        <span>More options</span>
+        <svg data-lucide="sliders-horizontal" class="w-4 h-4 ml-1"></svg>
+    </p>
+
+    <div id="more-options-panel" class="hidden w-full">
+        <div class="flex flex-col md:flex-row md:items-start gap-4 mt-2">
+            <!-- Category Filter -->
+            <div class="relative">
+                <button type="button" id="category-btn"
+                    class="bg-white text-black border border-gray-300 px-4 py-2 rounded-md shadow-sm flex items-center space-x-2">
+                    <span>Category</span>
+                    <svg data-lucide="chevron-down" class="w-4 h-4"></svg>
                 </button>
-            </form>
+
+                <div id="category-dropdown"
+                    class="absolute z-10 mt-2 w-56 bg-white border border-gray-200 rounded-lg shadow-lg hidden max-h-64 overflow-y-auto">
+                    @foreach($categories as $cat)
+                        <label class="flex items-center px-4 py-2 text-black hover:bg-gray-50">
+                            <input type="checkbox" name="categories[]" value="{{ $cat->id }}"
+                                {{ in_array($cat->id, request('categories', [])) ? 'checked' : '' }}
+                                class="mr-2">
+                            {{ $cat->name }}
+                        </label>
+                    @endforeach
+                </div>
+            </div>
+
+            <!-- Salary Filter -->
+            <div class="relative" x-data="{ open: false, mode: '{{ request('salary_mode', 'hourly') }}' }">
+                <button type="button" @click="open = !open"
+                    class="bg-white text-black border border-gray-300 px-4 py-2 rounded-md shadow-sm flex items-center space-x-2">
+                    <span>Salary</span>
+                    <svg data-lucide="chevron-down" class="w-4 h-4"></svg>
+                </button>
+
+                <div x-show="open" @click.outside="open = false"
+                    class="absolute z-20 mt-2 w-72 md:w-[400px] bg-white border border-gray-200 rounded-lg shadow-lg p-4 text-black"
+                    x-transition>
+
+                    <!-- Tabs -->
+                    <div class="flex border-b mb-4">
+                        <button type="button"
+                            :class="mode === 'hourly' ? 'text-blue-600 font-semibold border-b-2 border-blue-600' : 'text-gray-500'"
+                            @click="mode = 'hourly'"
+                            class="px-4 py-2 focus:outline-none">Hourly</button>
+                        <button type="button"
+                            :class="mode === 'weekly' ? 'text-blue-600 font-semibold border-b-2 border-blue-600' : 'text-gray-500'"
+                            @click="mode = 'weekly'"
+                            class="px-4 py-2 focus:outline-none">Weekly</button>
+                    </div>
+
+                    <input type="hidden" name="salary_mode" :value="mode">
+
+                    <template x-if="mode === 'hourly'">
+                        <div class="flex flex-col gap-3">
+                            <div>
+                                <label class="block text-sm text-gray-600 mb-1">From • MYR</label>
+                                <input type="number" name="min_hourly" placeholder="e.g. 10" step="0.1"
+                                    value="{{ request('min_hourly') }}"
+                                    class="w-full border border-gray-300 rounded-md px-3 py-2 shadow-sm focus:ring focus:ring-blue-200">
+                            </div>
+                            <div>
+                                <label class="block text-sm text-gray-600 mb-1">To • MYR</label>
+                                <input type="number" name="max_hourly" placeholder="e.g. 30" step="0.1"
+                                    value="{{ request('max_hourly') }}"
+                                    class="w-full border border-gray-300 rounded-md px-3 py-2 shadow-sm focus:ring focus:ring-blue-200">
+                            </div>
+                        </div>
+                    </template>
+
+                    <template x-if="mode === 'weekly'">
+                        <div class="flex flex-col gap-3">
+                            <div>
+                                <label class="block text-sm text-gray-600 mb-1">From • MYR</label>
+                                <input type="number" name="min_weekly" placeholder="e.g. 100" step="1"
+                                    value="{{ request('min_weekly') }}"
+                                    class="w-full border border-gray-300 rounded-md px-3 py-2 shadow-sm focus:ring focus:ring-blue-200">
+                            </div>
+                            <div>
+                                <label class="block text-sm text-gray-600 mb-1">To • MYR</label>
+                                <input type="number" name="max_weekly" placeholder="e.g. 500" step="1"
+                                    value="{{ request('max_weekly') }}"
+                                    class="w-full border border-gray-300 rounded-md px-3 py-2 shadow-sm focus:ring focus:ring-blue-200">
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+
+
+
+                
 
             <div id="suggestions" class="mt-3 hidden bg-white border rounded shadow-md p-3 text-sm text-black"></div>
         </div>
@@ -119,35 +241,53 @@
             </div>
         </div>
 
-       <div id="job-details"
-     class="mt-6 p-6 bg-white shadow-xl rounded-lg hidden"
+      <div id="job-details" class="mt-6 p-6 bg-white shadow-xl rounded-lg hidden"
      data-step="4"
-     data-intro="View full job details here after selecting a job from the list. Click 'Apply Now' when you're ready.">
+     data-intro="This panel displays detailed job information after you select a job.">
+    
     <h3 class="text-2xl font-bold text-gray-800 mb-2" id="job-title">Job Title</h3>
 
+    <!-- 🏢 Company Name -->
+    <div class="flex items-center text-sm text-gray-600 mt-1">
+        <svg data-lucide="briefcase" class="w-4 h-4 mr-2 stroke-gray-500"></svg>
+        <span id="job-company">Company Name</span>
+    </div>
+
+    <!-- 📍 Location -->
     <div class="flex items-center text-sm text-gray-600 mt-1">
         <svg data-lucide="map-pin" class="w-4 h-4 mr-2 stroke-gray-500"></svg>
         <span id="job-location">Location</span>
     </div>
 
+    <!-- 💵 Hourly Pay -->
     <div class="flex items-center text-sm text-gray-600 mt-1">
         <svg data-lucide="dollar-sign" class="w-4 h-4 mr-2 stroke-green-600"></svg>
         <span id="job-salary">Salary: RM 0.00</span>
     </div>
 
+    <!-- 💰 Estimated Weekly Pay -->
+    <div class="flex items-center text-sm text-yellow-600 font-medium mt-1">
+        <svg data-lucide="wallet" class="w-4 h-4 mr-2 stroke-yellow-600"></svg>
+        <span id="job-weekly-pay">Est. Weekly Pay: RM 0.00</span>
+    </div>
+
+    <!-- 🗓️ Schedule -->
     <div class="flex items-start text-sm text-gray-600 mt-3" id="job-schedule-container">
         <svg data-lucide="calendar-clock" class="w-4 h-4 mr-2 mt-1 stroke-blue-500"></svg>
         <div class="space-y-1" id="job-schedule"></div>
     </div>
 
+    <!-- 📝 Description -->
     <div class="mt-4">
         <h4 class="text-md font-semibold text-gray-700 mb-1">Job Description:</h4>
         <p class="text-sm text-gray-600" id="job-description">No description provided.</p>
     </div>
 
+    <!-- 🧠 Required Skills -->
     <div class="mt-4">
         <h4 class="text-md font-semibold text-gray-700 mb-1">Required Skills:</h4>
         <div id="job-skills" class="flex flex-wrap gap-2"></div>
+    </div>
 
         <div class="mt-6">
             <a href="#" id="apply-btn"
@@ -252,7 +392,7 @@
     //     });
     // }
 
-      function renderJobCard(job) {
+  function renderJobCard(job) {
     const jobList = document.getElementById("job-list");
     const jobCard = document.createElement("div");
     jobCard.className = "p-4 border rounded shadow-sm job-card cursor-pointer hover:bg-blue-50 transition";
@@ -281,6 +421,16 @@
             <svg data-lucide="map-pin" class="w-4 h-4 mr-1 stroke-gray-500"></svg>
             <span>${job.location ?? 'Location not specified'}</span>
         </div>
+
+                ${job.category?.name ? `
+                <div class="flex items-center text-sm text-gray-600 mt-1">
+                    <svg data-lucide="tag" class="w-4 h-4 mr-1 stroke-purple-500"></svg>
+                    <span>${job.category.name}</span>
+                </div>
+            ` : ''}
+
+
+        
 
         ${job.salary ? `
             <div class="flex items-center text-sm text-gray-600 mt-1">
@@ -313,6 +463,7 @@
         icons: window.lucide?.icons
     });
 }
+
 
 
 
@@ -353,6 +504,11 @@ function showJobDetails(job) {
     document.getElementById('job-location').innerText = job.location ?? 'Location not specified';
     document.getElementById('job-salary').innerText = job.salary ? `RM ${parseFloat(job.salary).toFixed(2)} per hour` : 'Not specified';
     document.getElementById('job-description').innerText = job.description ?? 'No description provided.';
+    document.getElementById('job-company').innerText = job.company_name ?? 'Company not specified';
+    document.getElementById('job-weekly-pay').innerText = job.weekly_pay
+        ? `Est. Weekly Pay: RM ${job.weekly_pay}`
+        : 'Est. Weekly Pay: Not available';
+
 
     // Skills
     const skillsContainer = document.getElementById('job-skills');
@@ -720,6 +876,46 @@ if (Array.isArray(job.skills) && job.skills.length > 0) {
 
     window.initMap = initMap;
 </script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const moreOptionsBtn = document.getElementById('more-options-btn');
+        const moreOptionsPanel = document.getElementById('more-options-panel');
+        const categoryBtn = document.getElementById('category-btn');
+        const categoryDropdown = document.getElementById('category-dropdown');
+        const searchBtn = document.getElementById('search-btn');
+        const searchForm = document.getElementById('job-search-form');
+
+        // ✅ Toggle "More options" panel
+        moreOptionsBtn?.addEventListener('click', () => {
+            moreOptionsPanel?.classList.toggle('hidden');
+        });
+
+        // ✅ Toggle Category Dropdown (stop bubbling so click inside is allowed)
+        categoryBtn?.addEventListener('click', (e) => {
+            e.stopPropagation();
+            categoryDropdown?.classList.toggle('hidden');
+        });
+
+        // ✅ Prevent dropdown from closing if clicking inside
+        categoryDropdown?.addEventListener('click', (e) => {
+            e.stopPropagation();
+        });
+
+        // ✅ Close dropdown if clicking outside
+        document.addEventListener('click', function (e) {
+            if (!categoryBtn.contains(e.target) && !categoryDropdown.contains(e.target)) {
+                categoryDropdown.classList.add('hidden');
+            }
+        });
+
+        // ✅ Manual form submission via button
+        searchBtn?.addEventListener('click', function () {
+            searchForm?.submit();
+        });
+    });
+</script>
+
 
 
 <!-- Google Maps API with geometry library -->

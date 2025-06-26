@@ -99,7 +99,7 @@
                     @elseif($role === 'student')
                         <a href="{{ route('student.dashboard') }}" class="side-link flex items-center gap-2">
                             <svg data-lucide="home" class="w-4 h-4"></svg>
-                            Dashboard
+                            Job Search
                         </a>
                         <a href="{{ route('student.applied.jobs') }}" class="side-link flex items-center gap-2">
                             <svg data-lucide="file-text" class="w-4 h-4"></svg>

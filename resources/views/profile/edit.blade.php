@@ -104,29 +104,31 @@
 
 {{-- Skill Removal Script --}}
 <script>
-    function removeSkill(skillId, event) {
-        if (!confirm('Are you sure you want to remove this skill?')) return;
+  function removeSkill(skillId, event) {
+    if (!confirm('Are you sure you want to remove this skill?')) return;
 
-        fetch(`/profile/skills/${skillId}`, {
-            method: 'DELETE',
-            headers: {
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                'Accept': 'application/json',
-                'Content-Type': 'application/json'
-            }
-        })
-        .then(response => {
-            if (response.ok) {
-                event.target.closest('span').remove();
-            } else {
-                alert('Failed to remove skill.');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('An error occurred while removing the skill.');
-        });
-    }
+    fetch(`/profile/skills/${skillId}`, {
+        method: 'DELETE',
+        headers: {
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => {
+        if (response.ok) {
+            event.target.closest('span').remove();
+            showToast('Skill removed successfully!', 'red'); // ✅ show toast
+        } else {
+            showToast('Failed to remove skill.', 'red');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showToast('An error occurred while removing the skill.', 'red');
+    });
+}
+
 </script>
 
 <script>
@@ -199,7 +201,12 @@
     function showToast(message, color = 'green') {
         const toast = document.createElement('div');
         toast.textContent = message;
-        toast.className = `fixed top-5 right-5 bg-${color}-500 text-white px-4 py-2 rounded shadow-md z-50 animate-fade-in-up`;
+       let bgColor = 'bg-green-500';
+if (color === 'red') bgColor = 'bg-red-500';
+if (color === 'blue') bgColor = 'bg-blue-500';
+
+toast.className = `fixed top-5 right-5 ${bgColor} text-white px-4 py-2 rounded shadow-md z-50 animate-fade-in-up`;
+
         document.body.appendChild(toast);
         setTimeout(() => {
             toast.classList.add('opacity-0', 'transition-opacity');
