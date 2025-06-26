@@ -40,6 +40,28 @@
                     </button>
                 </div>
 
+                <!-- Category Filter Dropdown -->
+                <div class="relative">
+                    <button type="button" id="category-btn"
+                        class="bg-white text-black border border-gray-300 px-4 py-2 rounded-md shadow-sm flex items-center space-x-2">
+                        <span>Category</span>
+                        <svg data-lucide="chevron-down" class="w-4 h-4"></svg>
+                    </button>
+
+                    <div id="category-dropdown"
+                        class="absolute z-10 mt-2 w-56 bg-white border border-gray-200 rounded-lg shadow-lg hidden max-h-64 overflow-y-auto">
+                        @foreach($categories as $cat)
+                            <label class="flex items-center px-4 py-2 hover:bg-gray-50">
+                                <input type="checkbox" name="categories[]" value="{{ $cat->id }}"
+                                    {{ in_array($cat->id, request('categories', [])) ? 'checked' : '' }}
+                                    class="mr-2">
+                                {{ $cat->name }}
+                            </label>
+                        @endforeach
+                    </div>
+                </div>
+
+
                 <button type="button" id="search-btn"
                     class="bg-blue-600 text-white px-6 py-3 rounded-md shadow hover:bg-blue-700 transition">
                     Search
@@ -332,6 +354,16 @@
             <svg data-lucide="map-pin" class="w-4 h-4 mr-1 stroke-gray-500"></svg>
             <span>${job.location ?? 'Location not specified'}</span>
         </div>
+
+                ${job.category?.name ? `
+                <div class="flex items-center text-sm text-gray-600 mt-1">
+                    <svg data-lucide="tag" class="w-4 h-4 mr-1 stroke-purple-500"></svg>
+                    <span>${job.category.name}</span>
+                </div>
+            ` : ''}
+
+
+        
 
         ${job.salary ? `
             <div class="flex items-center text-sm text-gray-600 mt-1">
@@ -777,6 +809,33 @@ if (Array.isArray(job.skills) && job.skills.length > 0) {
 
     window.initMap = initMap;
 </script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const catBtn = document.getElementById('category-btn');
+        const catDropdown = document.getElementById('category-dropdown');
+        const searchBtn = document.getElementById('search-btn');
+        const searchForm = document.getElementById('job-search-form');
+
+        // Toggle dropdown
+        catBtn.addEventListener('click', () => {
+            catDropdown.classList.toggle('hidden');
+        });
+
+        // Hide dropdown when clicking outside
+        document.addEventListener('click', function (e) {
+            if (!catBtn.contains(e.target) && !catDropdown.contains(e.target)) {
+                catDropdown.classList.add('hidden');
+            }
+        });
+
+        // ✅ Manually submit form when clicking "Search" button
+        searchBtn.addEventListener('click', function () {
+            searchForm.submit();
+        });
+    });
+</script>
+
 
 
 <!-- Google Maps API with geometry library -->

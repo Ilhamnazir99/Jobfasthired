@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Job;
 use App\Models\Skill;
+use App\Models\JobCategory;
+
 
 class JobController extends Controller
 {
@@ -12,86 +14,88 @@ class JobController extends Controller
     public function create()
     {
         $googleApiKey = config('app.google_maps_api_key');
-        return view('employer.job_create', compact('googleApiKey'));
+          $categories = JobCategory::all(); 
+       return view('employer.job_create', compact('googleApiKey', 'categories'));
+
     }
 
     // Handle the job posting form submission
-    public function store(Request $request)
-    {
-        $request->validate([
-            'title' => 'required',
-            'description' => 'required',
-            'location' => 'required',
-            'address' => 'required',
-            'latitude' => 'required|numeric',
-            'longitude' => 'required|numeric',
-            'salary' => 'required|numeric',
-        ]);
+   public function store(Request $request)
+{
+    $request->validate([
+        'title' => 'required',
+        'description' => 'required',
+        'location' => 'required',
+        'address' => 'required',
+        'latitude' => 'required|numeric',
+        'longitude' => 'required|numeric',
+        'salary' => 'required|numeric',
+        'job_category_id' => 'required|exists:job_categories,id', // ✅ updated
+    ]);
 
-        // ✅ Validate schedule days: must include both start and end if active
-        $rawSchedule = $request->input('schedule', []);
-        $validatedSchedule = [];
+    // ✅ Validate schedule days
+    $rawSchedule = $request->input('schedule', []);
+    $validatedSchedule = [];
 
-        foreach ($rawSchedule as $day => $data) {
-            if (!empty($data['active'])) {
-                if (empty($data['start']) || empty($data['end'])) {
-                    return back()->withInput()->withErrors([
-                        "schedule.$day" => "Please provide both start and end time for " . ucfirst($day),
-                    ]);
-                }
-
-                // Check if end time is after start time
-        $startTimestamp = strtotime($data['start']);
-        $endTimestamp = strtotime($data['end']);
-
-        if ($endTimestamp <= $startTimestamp) {
-            return back()->withInput()->withErrors([
-                "schedule.$day" => ucfirst($day) . " end time must be after start time.",
-            ]);
-        }
-
-        $validatedSchedule[$day] = [
-            'start' => $data['start'],
-            'end' => $data['end'],
-        ];
-            }
-        }
-
-        // ✅ Step 1: Create the job
-        $job = Job::create([
-            'employer_id' => auth()->user()->id,
-            'title' => $request->title,
-            'description' => $request->description,
-            'location' => $request->location,
-            'address' => $request->address,
-            'latitude' => $request->latitude,
-            'longitude' => $request->longitude,
-            'salary' => $request->salary,
-            'schedule' => json_encode($validatedSchedule),
-            'category' => $request->category,
-            'status' => 'pending',
-        ]);
-
-        // ✅ Step 2: Attach skills (unchanged)
-        if ($request->has('skills') && is_array($request->skills)) {
-            $skillIds = [];
-
-            foreach ($request->skills as $skillName) {
-                $skillName = trim(strtolower($skillName));
-                if (empty($skillName)) continue;
-
-                $skill = Skill::firstOrCreate(['name' => $skillName]);
-                $skillIds[] = $skill->id;
+    foreach ($rawSchedule as $day => $data) {
+        if (!empty($data['active'])) {
+            if (empty($data['start']) || empty($data['end'])) {
+                return back()->withInput()->withErrors([
+                    "schedule.$day" => "Please provide both start and end time for " . ucfirst($day),
+                ]);
             }
 
-            $job->skills()->sync($skillIds);
-        }
+            $startTimestamp = strtotime($data['start']);
+            $endTimestamp = strtotime($data['end']);
 
-        return redirect()->route('employer.dashboard')->with([
-            'success' => 'Job posted successfully and is under review.',
-            'type' => 'success'
-        ]);
+            if ($endTimestamp <= $startTimestamp) {
+                return back()->withInput()->withErrors([
+                    "schedule.$day" => ucfirst($day) . " end time must be after start time.",
+                ]);
+            }
+
+            $validatedSchedule[$day] = [
+                'start' => $data['start'],
+                'end' => $data['end'],
+            ];
+        }
     }
+
+    // ✅ Create the job
+    $job = Job::create([
+        'employer_id' => auth()->user()->id,
+        'title' => $request->title,
+        'description' => $request->description,
+        'location' => $request->location,
+        'address' => $request->address,
+        'latitude' => $request->latitude,
+        'longitude' => $request->longitude,
+        'salary' => $request->salary,
+        'schedule' => json_encode($validatedSchedule),
+        'job_category_id' => $request->job_category_id, // ✅ use selected ID
+        'status' => 'pending',
+    ]);
+
+    // ✅ Step 2: Attach skills
+    if ($request->has('skills') && is_array($request->skills)) {
+        $skillIds = [];
+
+        foreach ($request->skills as $skillName) {
+            $skillName = trim(strtolower($skillName));
+            if (empty($skillName)) continue;
+
+            $skill = Skill::firstOrCreate(['name' => $skillName]);
+            $skillIds[] = $skill->id;
+        }
+
+        $job->skills()->sync($skillIds);
+    }
+
+    return redirect()->route('employer.dashboard')->with([
+        'success' => 'Job posted successfully and is under review.',
+        'type' => 'success'
+    ]);
+}
 
     // Student view job list
     public function index()

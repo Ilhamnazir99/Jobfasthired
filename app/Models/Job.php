@@ -19,6 +19,7 @@ class Job extends Model
         'category',
         'latitude',
         'longitude',
+         'job_category_id',
         'address', // ✅ FIXED this from 'full_address'
     ];
 
@@ -38,4 +39,9 @@ class Job extends Model
         return $this->belongsToMany(Skill::class, 'job_skill');
     }
     
+    public function category()
+{
+    return $this->belongsTo(JobCategory::class, 'job_category_id');
+}
+
 }

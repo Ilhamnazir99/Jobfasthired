@@ -46,6 +46,24 @@
         <span class="text-gray-600">RM/hour</span>
     </div>
 </div>
+<div>
+    <label class="block text-gray-700 font-semibold mb-2">Job Category <span class="text-red-500">*</span></label>
+    <select name="job_category_id" class="w-full border border-gray-300 px-4 py-2 rounded" required>
+        <option value="">-- Select a category --</option>
+        @foreach($categories as $cat)
+            <option value="{{ $cat->id }}">{{ $cat->name }}</option>
+        @endforeach
+    </select>
+</div>
+
+
+{{-- Optional category text input --}}
+<div id="custom-category-box" class="mt-2 hidden">
+    <label class="block text-gray-700 font-semibold mb-2">Specify Other Category</label>
+    <input type="text" name="custom_category" id="custom-category-input" class="w-full border border-gray-300 px-4 py-2 rounded" placeholder="e.g. Babysitting">
+</div>
+
+
 
 
             {{-- Schedule --}}
@@ -211,5 +229,17 @@ function removeSkill(button, skillName) {
     skillList = skillList.filter(skill => skill !== skillName.toLowerCase());
     button.parentElement.remove();
 }
+
+// Show/hide custom category input
+document.getElementById('category-select').addEventListener('change', function () {
+    const customBox = document.getElementById('custom-category-box');
+    if (this.value === 'other') {
+        customBox.classList.remove('hidden');
+    } else {
+        customBox.classList.add('hidden');
+        document.getElementById('custom-category-input').value = '';
+    }
+});
+
 </script>
 @endsection
